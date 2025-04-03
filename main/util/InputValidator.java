@@ -3,8 +3,7 @@ package main.util;
 import java.util.regex.Pattern;
 
 public class InputValidator {
-    // Condition for a valid NRIC (starts with S or T, followed by 7-digit number
-    // and ends with another letter)
+    // Condition for a valid NRIC (starts with S or T, followed by 7-digit number and ends with another letter)
     private static final Pattern NRIC_PATTERN = Pattern.compile("^[ST]\\d{7}[A-Z]$");
 
     // Validate NRIC format
