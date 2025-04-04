@@ -22,35 +22,44 @@ public class Authenticator {
             String password = sc.nextLine();
 
             boolean userFound = false;
+            boolean passwordFound = false;
+
+            // Validate NRIC Format
+            if (!InputValidator.isValidNRIC(UserID)) {
+                System.out.println("Incorrect format of NRIC. Please try again");
+                continue;
+            }
 
             // Validate username and password
             for (String i : UserData.keySet()) {
                 if (i.equals("Project")) {
                     continue;
-                } else {
+                } 
+                else {
                     List<List<String>> UserList = UserData.get(i);
                     for (int j = 0; j < UserList.size(); j++) {
-                        // Validate username
-                        if (InputValidator.isValidNRIC(UserList.get(j).get(1))) {
-                            System.err.println("Incorrect format of NRIC.");
-                            continue;
-                        }
-                        else if (UserList.get(j).get(1).equals(UserID)) {
+                        // Validate username        
+                        if (UserList.get(j).get(1).equals(UserID)) {
                             userFound = true;
                             // Validate password
                             if (UserList.get(j).get(4).equals(password)) {
                                 System.out.println("Log in succeeded.");
-                                System.out.println("Welcome back, " + UserList.get(j).get(0));
+                                System.out.println("Welcome back, " + i + " " + UserList.get(j).get(0));
+                                passwordFound = true;
                                 sc.close();
                                 return i;
-                            } else {
-                                System.out.println("Incorrect password.");
                             }
                         }
                     }
                 }
-                if (!userFound) {
-                    System.out.println("Username not found. Try again.");
+            }
+           
+            if (!userFound) {
+                System.out.println("Username not found. Please try again.");
+            }
+            else {
+                if (!passwordFound) {
+                    System.out.println("Incorrect password. Please try again.");
                 }
             }
         }
