@@ -38,23 +38,6 @@ public class ApplicantService {
         System.out.println("Application submitted successfully.");
     }
 
-    public static void bookFlat(Applicant applicant) {
-        Application app = getApplication(applicant.getNric());
-        if (app == null) {
-            System.out.println("No application found.");
-            return;
-        }
-
-        if (app.getStatus().equalsIgnoreCase("Successful")) {
-            app.setStatus("Booked");
-            System.out.println("Flat booking confirmed.");
-        } else if (app.getStatus().equalsIgnoreCase("Booked")) {
-            System.out.println("You have already booked a flat.");
-        } else {
-            System.out.println("You are not eligible to book a flat. Current status: " + app.getStatus());
-        }
-    }
-
     public static boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
             if (a.getApplicantNric().equals(applicant.getNric()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
