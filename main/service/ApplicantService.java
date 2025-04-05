@@ -1,6 +1,6 @@
-package services;
+package main.services;
 
-import models.*;
+import main.models.*;
 import java.util.*;
 
 public class ApplicantService {
