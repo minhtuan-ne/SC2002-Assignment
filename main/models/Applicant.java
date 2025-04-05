@@ -1,4 +1,4 @@
-package models;
+package main.models;
 
 public class Applicant extends User {
     public Applicant(String nric, String password, int age, String maritalStatus) {
