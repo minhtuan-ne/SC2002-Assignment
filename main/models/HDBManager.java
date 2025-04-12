@@ -2,14 +2,13 @@ package main.models;
 
 import java.util.ArrayList;
 
-class HDBManager {
+public class HDBManager extends User {
     // project list created by each manager
     private ArrayList<BTOProject> projects;
 
     // constructor
-    public HDBManager(String nric, String password, int age, String maritalStatus){
-        super(nric, password, age, maritalStatus);
-        projects = new ArrayList<>();
+    public HDBManager(String nric, String name, int age, String maritalStatus, String password) {
+        super(nric, name, age, maritalStatus, password);
     }
 
     // get created project by this manager
@@ -23,6 +22,9 @@ class HDBManager {
             projects.add(project);
         }
     }
+
+    @Override
+    public String getRole() { return "HDB Manager"; }
 
     // remove a project from the list
     public void removeProject(BTOProject project){

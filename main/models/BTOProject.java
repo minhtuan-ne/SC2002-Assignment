@@ -17,7 +17,7 @@ public class BTOProject {
     private int twoRoomUnitsAvailable;        // How many 2-room units are available
     private int threeRoomUnitsAvailable;      // How many 3-room units are available
     
-    private boolean visibility;                  // Whether the project is visible to applicants
+    private boolean visibility;               // Whether the project is visible to applicants
     private int maxOfficers;                  // Max number of HDB officers that can handle this project
     private ArrayList<HDBOfficer> HDBOfficers;// The officers assigned to handle
     private ArrayList<Application> applications;
@@ -33,10 +33,9 @@ public class BTOProject {
         this.threeRoomUnitsAvailable = threeRoomUnits;
         this.maxOfficers = maxOfficers;
         this.visibility = true; 
-        this.hdbOfficers = new ArrayList<>();
+        this.HDBOfficers = new ArrayList<>();
         this.applications = new ArrayList<>();
     }
-
     
     public HDBManager getManager() {
         return manager;
@@ -111,7 +110,7 @@ public class BTOProject {
     }
 
     public List<HDBOfficer> getHDBOfficers() {
-        return hdbOfficers;
+        return HDBOfficers;
     }
 
     public ArrayList<Application> getApplications() {

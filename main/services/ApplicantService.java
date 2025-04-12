@@ -1,7 +1,7 @@
 package main.services;
 
-import main.models.*;
 import java.util.*;
+import main.models.*;
 
 public class ApplicantService {
     private static List<Application> applications = new ArrayList<>();
@@ -32,7 +32,7 @@ public class ApplicantService {
             return;
         }
 
-        Application application = new Application(applicant.getNric(), project.getProjectName(), flatType);
+        Application application = new Application(applicant, project.getProjectName(), flatType);
         applications.add(application);
         project.addApplication(application);
         System.out.println("Application submitted successfully.");
@@ -40,7 +40,7 @@ public class ApplicantService {
 
     public static boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
-            if (a.getApplicantNric().equals(applicant.getNric()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
+            if (a.getApplicant().getNRIC().equals(applicant.getNRIC()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
                 return true;
             }
         }
@@ -49,7 +49,7 @@ public class ApplicantService {
 
     public static Application getApplication(String nric) {
         for (Application a : applications) {
-            if (a.getApplicantNric().equals(nric)) {
+            if (a.getApplicant().getNRIC().equals(nric)) {
                 return a;
             }
         }
@@ -57,7 +57,7 @@ public class ApplicantService {
     }
 
     public static void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
-        Application app = getApplication(applicant.getNric());
+        Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application found.");
             return;
@@ -71,7 +71,7 @@ public class ApplicantService {
                 System.out.println("Project Name: " + p.getProjectName());
                 System.out.println("Neighborhood: " + p.getNeighborhood());
                 System.out.println("Application Period: " + p.getStartDate() + " to " + p.getEndDate());
-                System.out.println("Manager: " + p.getManager().getNric());
+                System.out.println("Manager: " + p.getManager().getNRIC());
                 return;
             }
         }
@@ -79,7 +79,7 @@ public class ApplicantService {
     }
 
     public static boolean requestWithdrawal(Applicant applicant) {
-        Application app = getApplication(applicant.getNric());
+        Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application to withdraw.");
             return false;
@@ -117,7 +117,7 @@ public class ApplicantService {
 
     public static void submitEnquiry(Applicant applicant, String projectName, String message) {
         String enquiryId = UUID.randomUUID().toString();
-        Enquiry enquiry = new Enquiry(enquiryId, applicant.getNric(), projectName, message);
+        Enquiry enquiry = new Enquiry(enquiryId, applicant.getNRIC(), projectName, message);
         enquiries.add(enquiry);
         System.out.println("Enquiry submitted successfully.");
     }
@@ -125,7 +125,7 @@ public class ApplicantService {
     public static List<Enquiry> getApplicantEnquiries(Applicant applicant) {
         List<Enquiry> result = new ArrayList<>();
         for (Enquiry e : enquiries) {
-            if (e.getUserNric().equals(applicant.getNric())) {
+            if (e.getUserNric().equals(applicant.getNRIC())) {
                 result.add(e);
             }
         }
@@ -136,7 +136,7 @@ public class ApplicantService {
         Iterator<Enquiry> iterator = enquiries.iterator();
         while (iterator.hasNext()) {
             Enquiry e = iterator.next();
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNric())) {
+            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
                 iterator.remove();
                 System.out.println("Enquiry deleted successfully.");
                 return true;
@@ -148,7 +148,7 @@ public class ApplicantService {
 
     public static boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage) {
         for (Enquiry e : enquiries) {
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNric())) {
+            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
                 e.setMessage(newMessage);
                 System.out.println("Enquiry updated successfully.");
                 return true;
