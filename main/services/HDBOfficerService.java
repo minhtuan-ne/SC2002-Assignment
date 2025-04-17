@@ -2,8 +2,9 @@ package main.services;
 
 import main.models.HDBOfficer;
 
-public class HDBOfficerService {
+public class HDBOfficerService implements IHDBOfficerService {
 
+    @Override
     public void assignToProject(HDBOfficer officer, String projectId) {
         if (officer.isHandlingProject()) {
             System.out.println("Officer already handling a project.");
@@ -13,6 +14,7 @@ public class HDBOfficerService {
         }
     }
 
+    @Override
     public void removeFromProject(HDBOfficer officer) {
         if (!officer.isHandlingProject()) {
             System.out.println("Officer is not currently handling a project.");
@@ -23,12 +25,14 @@ public class HDBOfficerService {
         }
     }
 
+    @Override
     // Placeholder methods for expansion
     public void bookFlat(String applicantNric, String flatType) {
         System.out.println("Flat of type " + flatType + " booked for applicant " + applicantNric);
         // Eventually link to Project/Applicant/Flat service
     }
 
+    @Override
     public void replyToEnquiry(String enquiryId, String message) {
         System.out.println("Replied to enquiry " + enquiryId + ": " + message);
         // Eventually update enquiry records

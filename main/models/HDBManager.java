@@ -1,18 +1,20 @@
 package main.models;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class HDBManager extends User {
     // project list created by each manager
-    private ArrayList<BTOProject> projects;
+    private List<BTOProject> projects;
 
     // constructor
     public HDBManager(String nric, String name, int age, String maritalStatus, String password) {
         super(nric, name, age, maritalStatus, password);
+        this.projects = new ArrayList<>();
     }
 
     // get created project by this manager
-    public ArrayList<BTOProject> getProjects(){
+    public List<BTOProject> getProjects(){
         return projects;
     }
 

@@ -12,17 +12,17 @@ public class BTOProject {
     private String neighborhood;              // E.g., Yishun, Boon Lay, etc.
     public Date startDate;                    // Application opening date
     public Date endDate;                      // Application closing date
-    private ArrayList<String> flatTypes;      // ["2-room", "3-room"]
+    private List<String> flatTypes;      // ["2-room", "3-room"]
     
     private int twoRoomUnitsAvailable;        // How many 2-room units are available
     private int threeRoomUnitsAvailable;      // How many 3-room units are available
     
     private boolean visibility;               // Whether the project is visible to applicants
     private int maxOfficers;                  // Max number of HDB officers that can handle this project
-    private ArrayList<HDBOfficer> HDBOfficers;// The officers assigned to handle
-    private ArrayList<Application> applications;
+    private List<HDBOfficer> HDBOfficers;// The officers assigned to handle
+    private List<Application> applications;
 
-    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, ArrayList<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers) {
+    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers) {
         this.manager = manager;
         this.projectName = projectName;
         this.neighborhood = neighborhood;
@@ -73,7 +73,7 @@ public class BTOProject {
         this.endDate = endDate;
     }
 
-    public ArrayList<String> getFlatTypes() {
+    public List<String> getFlatTypes() {
         return flatTypes;
     }
 
@@ -113,7 +113,7 @@ public class BTOProject {
         return HDBOfficers;
     }
 
-    public ArrayList<Application> getApplications() {
+    public List<Application> getApplications() {
         return applications; 
     }
 
@@ -131,9 +131,9 @@ public class BTOProject {
 
     // get available units for each flat type
     public int getUnits(String flatType) {
-        if ("2-room".equals(flatType)) {
+        if ("2-room".equalsIgnoreCase(flatType)) {
             return twoRoomUnitsAvailable;
-        } else if ("3-room".equals(flatType)) {
+        } else if ("3-room".equalsIgnoreCase(flatType)) {
             return threeRoomUnitsAvailable;
         } else {
             // If more flat types exist, handle them or default to 0
@@ -143,9 +143,9 @@ public class BTOProject {
 
     // set units for each flat type
     public void setUnits(String flatType, int units) {
-        if ("2-room".equals(flatType)) {
+        if ("2-room".equalsIgnoreCase(flatType)) {
             this.twoRoomUnitsAvailable = units;
-        } else if ("3-room".equals(flatType)) {
+        } else if ("3-room".equalsIgnoreCase(flatType)) {
             this.threeRoomUnitsAvailable = units;
         } else {
             // If more flat types exist, handle them accordingly

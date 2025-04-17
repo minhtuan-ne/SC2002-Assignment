@@ -3,11 +3,12 @@ package main.services;
 import java.util.*;
 import main.models.*;
 
-public class ApplicantService {
+public class ApplicantService implements IApplicantService {
     private static List<Application> applications = new ArrayList<>();
     private static List<Enquiry> enquiries = new ArrayList<>();
 
-    public static void apply(Applicant applicant, BTOProject project, String flatType) {
+    @Override
+    public void apply(Applicant applicant, BTOProject project, String flatType) {
         if (hasApplied(applicant)) {
             System.out.println("You already have an active application.");
             return;
@@ -38,7 +39,8 @@ public class ApplicantService {
         System.out.println("Application submitted successfully.");
     }
 
-    public static boolean hasApplied(Applicant applicant) {
+    @Override
+    public boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
             if (a.getApplicant().getNRIC().equals(applicant.getNRIC()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
                 return true;
@@ -47,7 +49,8 @@ public class ApplicantService {
         return false;
     }
 
-    public static Application getApplication(String nric) {
+    @Override
+    public Application getApplication(String nric) {
         for (Application a : applications) {
             if (a.getApplicant().getNRIC().equals(nric)) {
                 return a;
@@ -56,7 +59,8 @@ public class ApplicantService {
         return null;
     }
 
-    public static void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
+    @Override
+    public void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
         Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application found.");
@@ -78,7 +82,8 @@ public class ApplicantService {
         System.out.println("Applied project details are not found.");
     }
 
-    public static boolean requestWithdrawal(Applicant applicant) {
+    @Override
+    public boolean requestWithdrawal(Applicant applicant) {
         Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application to withdraw.");
@@ -94,8 +99,8 @@ public class ApplicantService {
         System.out.println("Cannot withdraw application in current state: " + app.getStatus());
         return false;
     }
-
-    public static List<BTOProject> viewAvailableProjects(Applicant applicant, List<BTOProject> allProjects) {
+    @Override
+    public List<BTOProject> viewAvailableProjects(Applicant applicant, List<BTOProject> allProjects) {
         List<BTOProject> result = new ArrayList<>();
         Date today = new Date();
 

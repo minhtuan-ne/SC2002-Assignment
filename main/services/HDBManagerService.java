@@ -1,67 +1,92 @@
+// main/services/HDBManagerService.java
 package main.services;
+
+import main.models.*;
+import main.repositories.IProjectRepository;
 
 import java.util.ArrayList;
 import java.util.Date;
-import main.models.*;
+import java.util.List;
 
-public class HDBManagerService {
+public class HDBManagerService implements IHDBManagerService {
+    private final IProjectRepository projectRepository;
 
-    // Create a new project
-    public static boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate, Date endDate, ArrayList<String> flatTypes, int twoRoomUnits, int threeRoomUnits) {
-        ArrayList<BTOProject> existingProjects = manager.getProjects();
+    public HDBManagerService(IProjectRepository projectRepository) {
+        this.projectRepository = projectRepository;
+    }
 
-        for (BTOProject project : existingProjects) {
-            // Fix: use getter methods assuming start/endDate are private
-            if (startDate.before(project.getEndDate()) && endDate.after(project.getStartDate())) {
-                return false; // Overlap found
+    @Override
+    public boolean createProject(HDBManager manager,
+                                 String name,
+                                 String neighborhood,
+                                 Date startDate,
+                                 Date endDate,
+                                 List<String> flatTypes,
+                                 int twoRoomUnits,
+                                 int threeRoomUnits) {
+
+        // Check for overlapping projects
+        for (BTOProject p : projectRepository.getAllProjects()) {
+            if (startDate.before(p.getEndDate()) && endDate.after(p.getStartDate())) {
+                // Overlap found
+                return false;
             }
         }
-
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10);
-        ProjectRepository.addProject(newProject);
+        projectRepository.addProject(newProject);
         manager.addProject(newProject);
         return true;
     }
 
-    // View all projects
-    public static ArrayList<BTOProject> viewAllProjects() {
-        return ProjectRepository.getAllProjects();
+    @Override
+    public List<BTOProject> viewAllProjects() {
+        return projectRepository.getAllProjects();
     }
 
-    // View manager's own projects
-    public static ArrayList<BTOProject> viewOwnProjects(HDBManager manager) {
+    @Override
+    public List<BTOProject> viewOwnProjects(HDBManager manager) {
         return manager.getProjects();
     }
 
-    // Change project visibility
-    public static void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
+    @Override
+    public void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
         if (project.getManager().equals(manager)) {
             project.setVisibility(visibility);
         }
     }
 
-    // Edit a BTO project
-    public static void editBTOProject(HDBManager manager, BTOProject project, String newName, String newNeighborhood, Date newStartDate, Date newEndDate, ArrayList<String> flatTypes, int newTwoRoomUnits, int newThreeRoomUnits) {
-        if (project.getManager().equals(manager)) {
-            project.setProjectName(newName);
-            project.setNeighborhood(newNeighborhood);
-            project.setStartDate(newStartDate);
-            project.setEndDate(newEndDate);
-            project.setTwoRoomUnitsAvailable(newTwoRoomUnits);
-            project.setThreeRoomUnitsAvailable(newThreeRoomUnits);
+    @Override
+    public void editBTOProject(HDBManager manager,
+                               BTOProject project,
+                               String newName,
+                               String newNeighborhood,
+                               Date newStartDate,
+                               Date newEndDate,
+                               List<String> flatTypes,
+                               int newTwoRoomUnits,
+                               int newThreeRoomUnits) {
+        if (!project.getManager().equals(manager)) {
+            return;
         }
+        project.setProjectName(newName);
+        project.setNeighborhood(newNeighborhood);
+        project.setStartDate(newStartDate);
+        project.setEndDate(newEndDate);
+        project.setFlatTypes(new ArrayList<>(flatTypes));
+        project.setTwoRoomUnitsAvailable(newTwoRoomUnits);
+        project.setThreeRoomUnitsAvailable(newThreeRoomUnits);
     }
 
-    // Delete a project
-    public static void deleteBTOProject(HDBManager manager, BTOProject project) {
+    @Override
+    public void deleteBTOProject(HDBManager manager, BTOProject project) {
         if (project.getManager().equals(manager)) {
             manager.removeProject(project);
-            ProjectRepository.removeProject(project);
+            projectRepository.removeProject(project);
         }
     }
 
-    // Officer registration
-    public static boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
+    @Override
+    public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (!project.getManager().equals(manager)) {
             return false;
         }
@@ -72,21 +97,20 @@ public class HDBManagerService {
         return false;
     }
 
-    // Handle BTO application approval
-    public static boolean handleBTOApplication(HDBManager manager, Application application) {
+    @Override
+    public boolean handleBTOApplication(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
-        ArrayList<BTOProject> all = ProjectRepository.getAllProjects();
-
-        for (BTOProject project : all) {
+        for (BTOProject project : projectRepository.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
                 if (!project.getManager().equals(manager)) {
                     return false;
                 }
-
                 String flatType = application.getFlatType();
                 int available = project.getUnits(flatType);
                 if (available > 0) {
-                    // Assume update status and reduce count happens elsewhere
+                    // E.g. set status or reduce units
+                    application.setStatus("Successful");
+                    project.setUnits(flatType, available - 1);
                     return true;
                 }
             }
@@ -94,40 +118,37 @@ public class HDBManagerService {
         return false;
     }
 
-    // Handle withdrawal request
-    public static void handleWithdrawal(HDBManager manager, Application application) {
+    @Override
+    public void handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
-        ArrayList<BTOProject> all = ProjectRepository.getAllProjects();
+        for (BTOProject project : projectRepository.getAllProjects()) {
+            if (project.getManager().equals(manager)
+                && project.getProjectName().equalsIgnoreCase(projectName)) {
 
-        for (BTOProject project : all) {
-            if (project.getManager().equals(manager) && project.getProjectName().equalsIgnoreCase(projectName)) {
                 String status = application.getStatus();
-
-                if ("Successful".equalsIgnoreCase(status) || "Booked".equalsIgnoreCase(status)) {
+                if ("Successful".equalsIgnoreCase(status) 
+                    || "Booked".equalsIgnoreCase(status)) {
                     String flatType = application.getFlatType();
                     int current = project.getUnits(flatType);
                     project.setUnits(flatType, current + 1);
                 }
-
                 application.setStatus("Withdrawn");
             }
         }
     }
 
-    // Generate booking report based on 2-room or 3-room
-    public static void bookingReport(HDBManager manager, String filter) {
-        ArrayList<BTOProject> all = manager.getProjects();
-
+    @Override
+    public void bookingReport(HDBManager manager, String filter) {
+        List<BTOProject> all = manager.getProjects();
         for (BTOProject project : all) {
             for (Application application : project.getApplications()) {
                 if ("Booked".equalsIgnoreCase(application.getStatus())
-                        && application.getFlatType().equalsIgnoreCase(filter)) {
-
+                    && filter.equalsIgnoreCase(application.getFlatType())) {
                     System.out.println("Applicant: " + application.getApplicant().getNRIC()
-                            + ", Flat type: " + application.getFlatType()
-                            + ", Project name: " + project.getProjectName()
-                            + ", Age: " + application.getApplicant().getAge()
-                            + ", Marital status: " + application.getApplicant().getMaritalStatus());
+                        + ", Flat type: " + application.getFlatType()
+                        + ", Project name: " + project.getProjectName()
+                        + ", Age: " + application.getApplicant().getAge()
+                        + ", Marital status: " + application.getApplicant().getMaritalStatus());
                 }
             }
         }
