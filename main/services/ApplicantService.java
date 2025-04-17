@@ -5,7 +5,6 @@ import main.models.*;
 
 public class ApplicantService {
     private static List<Application> applications = new ArrayList<>();
-    private static List<Enquiry> enquiries = new ArrayList<>();
 
     public static void apply(Applicant applicant, BTOProject project, String flatType) {
         if (hasApplied(applicant)) {
