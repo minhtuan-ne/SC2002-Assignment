@@ -36,6 +36,10 @@ public abstract class User {
         return maritalStatus;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
     public boolean checkPassword(String password) {
         return this.password.equals(password);
     }
