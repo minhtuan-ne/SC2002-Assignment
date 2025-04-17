@@ -141,10 +141,10 @@ public class FileManager {
                     String neighborhood = data[1];
                     
                     // Flat types
-                    String type1 = data[2]; // e.g., "2-Room"
+                    String type1 = data[2]; 
                     int units1 = Integer.parseInt(data[3]);
                     
-                    String type2 = data[5]; // e.g., "3-Room"
+                    String type2 = data[5]; 
                     int units2 = Integer.parseInt(data[6]);
                     
                     // Create flat types list
@@ -199,6 +199,7 @@ public class FileManager {
                     }
                     
                     projects.add(project);
+                    manager.addProject(project);
                 }
             }
         } catch (IOException | ParseException e) {
@@ -236,13 +237,12 @@ public class FileManager {
      * Helper method to assign an officer to a project
      */
     private static void assignOfficerToProject(HDBOfficer officer, BTOProject project) {
-        // This method needs to be implemented according to your application's design
-        // Add the officer to the project's list of officers
-        project.getHDBOfficers().add(officer);
-        
-        // If your HDBOfficer class has a method to assign projects, use it here
-        // officer.assignProject(project);
-    }
+      project.getHDBOfficers().add(officer);
+      
+      officer.assignToProject(project.getProjectName());
+      
+      System.out.println("Officer " + officer.getName() + " assigned to project: " + project.getProjectName());
+  }
     
     /**
      * Saves all applicants to the CSV file
@@ -268,7 +268,6 @@ public class FileManager {
     
     /**
      * Saves all projects to the CSV file
-     * Note: This method is a placeholder since we don't have pricing information in the BTOProject class
      */
     public static void saveProjects(List<BTOProject> projects) {
         try (PrintWriter writer = new PrintWriter(new FileWriter(PROJECT_FILE))) {
