@@ -116,45 +116,49 @@ public class ApplicantService {
     }
 
     public static void submitEnquiry(Applicant applicant, String projectName, String message) {
-        String enquiryId = UUID.randomUUID().toString();
+        String enquiryId = "ENQ" + UUID.randomUUID().toString().substring(0, 8);
         Enquiry enquiry = new Enquiry(enquiryId, applicant.getNRIC(), projectName, message);
-        enquiries.add(enquiry);
-        System.out.println("Enquiry submitted successfully.");
+        EnquiryRepository.addEnquiry(enquiry);
+        System.out.println("Your enquiry has been submitted with ID: " + enquiryId);
     }
 
     public static List<Enquiry> getApplicantEnquiries(Applicant applicant) {
-        List<Enquiry> result = new ArrayList<>();
-        for (Enquiry e : enquiries) {
-            if (e.getUserNric().equals(applicant.getNRIC())) {
-                result.add(e);
+        List<Enquiry> applicantEnquiries = new ArrayList<>();
+        for (Enquiry enquiry : EnquiryRepository.getAllEnquiries()) {
+            if (enquiry.getUserNric().equals(applicant.getNRIC())) {
+                applicantEnquiries.add(enquiry);
             }
         }
-        return result;
+        return applicantEnquiries;
     }
 
     public static boolean deleteEnquiry(Applicant applicant, String enquiryId) {
-        Iterator<Enquiry> iterator = enquiries.iterator();
-        while (iterator.hasNext()) {
-            Enquiry e = iterator.next();
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
-                iterator.remove();
-                System.out.println("Enquiry deleted successfully.");
-                return true;
-            }
+        Enquiry enquiry = EnquiryRepository.getEnquiryById(enquiryId);
+        if (enquiry != null && enquiry.getUserNric().equals(applicant.getNRIC()) && !enquiry.hasReply()) {
+            EnquiryRepository.removeEnquiry(enquiry);
+            System.out.println("Enquiry deleted successfully.");
+            return true;
+        } else if (enquiry.hasReply()) {
+            System.out.println("Cannot delete an enquiry that has been replied to.");
+            return false;
+        } else {
+            System.out.println("Enquiry not found or you don't have permission to delete it.");
+            return false;
         }
-        System.out.println("Enquiry not found or you don't have permission to delete it.");
-        return false;
     }
 
     public static boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage) {
-        for (Enquiry e : enquiries) {
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
-                e.setMessage(newMessage);
-                System.out.println("Enquiry updated successfully.");
-                return true;
-            }
+        Enquiry enquiry = EnquiryRepository.getEnquiryById(enquiryId);
+        if (enquiry != null && enquiry.getUserNric().equals(applicant.getNRIC()) && !enquiry.hasReply()) {
+            enquiry.setMessage(newMessage);
+            System.out.println("Enquiry updated successfully.");
+            return true;
+        } else if (enquiry.hasReply()) {
+            System.out.println("Cannot edit an enquiry that has been replied to.");
+            return false;
+        } else {
+            System.out.println("Enquiry not found or you don't have permission to edit it.");
+            return false;
         }
-        System.out.println("Enquiry not found or you don't have permission to edit it.");
-        return false;
     }
 }

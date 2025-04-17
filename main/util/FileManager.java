@@ -199,7 +199,6 @@ public class FileManager {
                     }
                     
                     projects.add(project);
-                    manager.addProject(project);
                 }
             }
         } catch (IOException | ParseException e) {

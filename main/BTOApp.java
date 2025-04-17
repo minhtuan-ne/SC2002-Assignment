@@ -14,7 +14,6 @@ public class BTOApp {
     private static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy");
     private static User currentUser = null;
     private static ArrayList<BTOProject> allProjects = new ArrayList<>();
-    private static HashMap<String, User> userDatabase = new HashMap<>();
 
     public static void main(String[] args) {
         initializeSystem();
@@ -65,26 +64,26 @@ public class BTOApp {
             // Load and add all managers
             List<HDBManager> managers = FileManager.loadManagers();
             for (HDBManager manager : managers) {
-                userDatabase.put(manager.getNRIC(), manager);
+                UserRepository.addUser(manager);
             }
             System.out.println("Loaded " + managers.size() + " managers.");
             
             // Load and add all officers
             List<HDBOfficer> officers = FileManager.loadOfficers();
             for (HDBOfficer officer : officers) {
-                userDatabase.put(officer.getNRIC(), officer);
+                UserRepository.addUser(officer);
             }
             System.out.println("Loaded " + officers.size() + " officers.");
             
             // Load and add all applicants
             List<Applicant> applicants = FileManager.loadApplicants();
             for (Applicant applicant : applicants) {
-                userDatabase.put(applicant.getNRIC(), applicant);
+                UserRepository.addUser(applicant);
             }
             System.out.println("Loaded " + applicants.size() + " applicants.");
             
             // Load all projects
-            List<BTOProject> projects = FileManager.loadProjects(userDatabase);
+            List<BTOProject> projects = FileManager.loadProjects(UserRepository.getUserDatabase());
             for (BTOProject project : projects) {
                 ProjectRepository.addProject(project);
             }
@@ -119,15 +118,15 @@ public class BTOApp {
             return;
         }
 
-        if (!userDatabase.containsKey(nric)) {
+        if (!UserRepository.containsUser(nric)) {
             System.out.println("User not found.");
             return;
         }
-
+        
         System.out.print("Password: ");
         String password = scanner.nextLine();
-
-        User user = userDatabase.get(nric);
+        
+        User user = UserRepository.getUser(nric);
         if (user.checkPassword(password)) {
             currentUser = user;
             System.out.println("Login successful. Welcome, " + user.getName() + "!");
@@ -199,10 +198,14 @@ public class BTOApp {
             System.out.println("6. Delete Project");
             System.out.println("7. Handle Applications");
             System.out.println("8. Booking Report");
-            System.out.println("9. Logout");
-
+            System.out.println("9. Handle Officer Registrations");
+            System.out.println("10. Handle Withdrawal Requests");
+            System.out.println("11. View All Enquiries");
+            System.out.println("12. Reply to Project Enquiries");
+            System.out.println("13. Logout");
+    
             int choice = getIntInput("Enter your choice: ");
-
+    
             switch (choice) {
                 case 1:
                     createProject(manager);
@@ -229,6 +232,18 @@ public class BTOApp {
                     generateBookingReport(manager);
                     break;
                 case 9:
+                    handleOfficerRegistrations(manager);
+                    break;
+                case 10:
+                    handleWithdrawalRequests(manager);
+                    break;
+                case 11:
+                    viewAllEnquiries();
+                    break;
+                case 12:
+                    replyToEnquiries(manager);
+                    break;
+                case 13:
                     System.out.println("Logging out...");
                     currentUser = null;
                     return;
@@ -897,6 +912,234 @@ public class BTOApp {
                 break;
             default:
                 System.out.println("Invalid choice.");
+        }
+    }
+
+    // Handle officer registrations
+    private static void handleOfficerRegistrations(HDBManager manager) {
+        System.out.println("\n===== Handle Officer Registrations =====");
+        ArrayList<BTOProject> projects = HDBManagerService.viewOwnProjects(manager);
+
+        if (projects.isEmpty()) {
+            System.out.println("You have no projects.");
+            return;
+        }
+
+        System.out.println("Select project:");
+        for (int i = 0; i < projects.size(); i++) {
+            System.out.println((i + 1) + ". " + projects.get(i).getProjectName());
+        }
+
+        int projectChoice = getIntInput("Enter project number (0 to cancel): ");
+        if (projectChoice == 0)
+            return;
+
+        if (projectChoice < 1 || projectChoice > projects.size()) {
+            System.out.println("Invalid project selection.");
+            return;
+        }
+
+        BTOProject selectedProject = projects.get(projectChoice - 1);
+        List<HDBOfficer> pendingOfficers = HDBManagerService.viewPendingOfficerRegistrations(manager, selectedProject);
+
+        if (pendingOfficers.isEmpty()) {
+            System.out.println("No pending officer registrations.");
+            return;
+        }
+
+        System.out.println("Pending Officer Registrations:");
+        for (int i = 0; i < pendingOfficers.size(); i++) {
+            HDBOfficer officer = pendingOfficers.get(i);
+            System.out.println((i + 1) + ". " + officer.getName() + " (" + officer.getNRIC() + ")");
+        }
+
+        int officerChoice = getIntInput("Select officer to handle (0 to cancel): ");
+        if (officerChoice == 0)
+            return;
+
+        if (officerChoice < 1 || officerChoice > pendingOfficers.size()) {
+            System.out.println("Invalid officer selection.");
+            return;
+        }
+
+        HDBOfficer selectedOfficer = pendingOfficers.get(officerChoice - 1);
+
+        System.out.println("1. Approve");
+        System.out.println("2. Reject");
+        int actionChoice = getIntInput("Select action: ");
+
+        switch (actionChoice) {
+            case 1:
+                if (HDBManagerService.approveOfficerRegistration(manager, selectedProject, selectedOfficer)) {
+                    System.out.println("Officer registration approved.");
+                } else {
+                    System.out.println("Failed to approve registration. No available slots or insufficient permissions.");
+                }
+                break;
+            case 2:
+                HDBManagerService.rejectOfficerRegistration(manager, selectedProject, selectedOfficer);
+                System.out.println("Officer registration rejected.");
+                break;
+            default:
+                System.out.println("Invalid choice.");
+        }
+    }
+
+    // Handle withdrawal requests
+    private static void handleWithdrawalRequests(HDBManager manager) {
+        System.out.println("\n===== Handle Withdrawal Requests =====");
+        ArrayList<BTOProject> projects = HDBManagerService.viewOwnProjects(manager);
+
+        if (projects.isEmpty()) {
+            System.out.println("You have no projects.");
+            return;
+        }
+
+        System.out.println("Select project:");
+        for (int i = 0; i < projects.size(); i++) {
+            System.out.println((i + 1) + ". " + projects.get(i).getProjectName());
+        }
+
+        int projectChoice = getIntInput("Enter project number (0 to cancel): ");
+        if (projectChoice == 0)
+            return;
+
+        if (projectChoice < 1 || projectChoice > projects.size()) {
+            System.out.println("Invalid project selection.");
+            return;
+        }
+
+        BTOProject selectedProject = projects.get(projectChoice - 1);
+        ArrayList<Application> applications = selectedProject.getApplications();
+        ArrayList<Application> withdrawalRequests = new ArrayList<>();
+
+        for (Application app : applications) {
+            if ("Withdrawal Requested".equals(app.getStatus())) {
+                withdrawalRequests.add(app);
+            }
+        }
+
+        if (withdrawalRequests.isEmpty()) {
+            System.out.println("No withdrawal requests for this project.");
+            return;
+        }
+
+        System.out.println("Withdrawal Requests:");
+        for (int i = 0; i < withdrawalRequests.size(); i++) {
+            Application app = withdrawalRequests.get(i);
+            System.out.println((i + 1) + ". NRIC: " + app.getApplicant().getNRIC() +
+                    " | Flat Type: " + app.getFlatType());
+        }
+
+        int appChoice = getIntInput("Select request to handle (0 to cancel): ");
+        if (appChoice == 0)
+            return;
+
+        if (appChoice < 1 || appChoice > withdrawalRequests.size()) {
+            System.out.println("Invalid request selection.");
+            return;
+        }
+
+        Application selectedRequest = withdrawalRequests.get(appChoice - 1);
+
+        System.out.println("1. Approve Withdrawal");
+        System.out.println("2. Reject Withdrawal");
+        int actionChoice = getIntInput("Select action: ");
+
+        switch (actionChoice) {
+            case 1:
+                if (HDBManagerService.approveWithdrawalRequest(manager, selectedRequest)) {
+                    System.out.println("Withdrawal request approved.");
+                } else {
+                    System.out.println("Failed to approve withdrawal request.");
+                }
+                break;
+            case 2:
+                if (HDBManagerService.rejectWithdrawalRequest(manager, selectedRequest)) {
+                    System.out.println("Withdrawal request rejected.");
+                } else {
+                    System.out.println("Failed to reject withdrawal request.");
+                }
+                break;
+            default:
+                System.out.println("Invalid choice.");
+        }
+    }
+
+    // View all enquiries
+    private static void viewAllEnquiries() {
+        System.out.println("\n===== All Enquiries =====");
+        List<Enquiry> enquiries = HDBManagerService.viewAllEnquiries();
+
+        if (enquiries.isEmpty()) {
+            System.out.println("No enquiries found.");
+            return;
+        }
+
+        for (Enquiry enquiry : enquiries) {
+            System.out.println("ID: " + enquiry.getEnquiryId());
+            System.out.println("Project: " + enquiry.getProjectName());
+            System.out.println("From: " + enquiry.getUserNric());
+            System.out.println("Message: " + enquiry.getMessage());
+            System.out.println();
+        }
+    }
+
+    // Reply to enquiries
+    private static void replyToEnquiries(HDBManager manager) {
+        System.out.println("\n===== Reply to Enquiries =====");
+        ArrayList<BTOProject> projects = HDBManagerService.viewOwnProjects(manager);
+
+        if (projects.isEmpty()) {
+            System.out.println("You have no projects.");
+            return;
+        }
+
+        System.out.println("Select project:");
+        for (int i = 0; i < projects.size(); i++) {
+            System.out.println((i + 1) + ". " + projects.get(i).getProjectName());
+        }
+
+        int projectChoice = getIntInput("Enter project number (0 to cancel): ");
+        if (projectChoice == 0)
+            return;
+
+        if (projectChoice < 1 || projectChoice > projects.size()) {
+            System.out.println("Invalid project selection.");
+            return;
+        }
+
+        BTOProject selectedProject = projects.get(projectChoice - 1);
+        List<Enquiry> projectEnquiries = HDBManagerService.viewProjectEnquiries(manager, selectedProject.getProjectName());
+
+        if (projectEnquiries.isEmpty()) {
+            System.out.println("No enquiries for this project.");
+            return;
+        }
+
+        for (int i = 0; i < projectEnquiries.size(); i++) {
+            Enquiry enquiry = projectEnquiries.get(i);
+            System.out.println((i + 1) + ". ID: " + enquiry.getEnquiryId() + " | From: " + enquiry.getUserNric());
+            System.out.println("   Message: " + enquiry.getMessage());
+        }
+
+        int enquiryChoice = getIntInput("Select enquiry to reply to (0 to cancel): ");
+        if (enquiryChoice == 0)
+            return;
+
+        if (enquiryChoice < 1 || enquiryChoice > projectEnquiries.size()) {
+            System.out.println("Invalid enquiry selection.");
+            return;
+        }
+
+        Enquiry selectedEnquiry = projectEnquiries.get(enquiryChoice - 1);
+        System.out.print("Enter your reply: ");
+        String reply = scanner.nextLine();
+
+        if (HDBManagerService.replyToEnquiry(manager, selectedEnquiry, reply)) {
+            System.out.println("Reply sent successfully.");
+        } else {
+            System.out.println("Failed to send reply. Insufficient permissions.");
         }
     }
 

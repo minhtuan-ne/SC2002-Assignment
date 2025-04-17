@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 public class HDBManager extends User {
     // project list created by each manager
-    private ArrayList<BTOProject> projects;
+    private ArrayList<BTOProject> projects = new ArrayList<>();
 
     // constructor
     public HDBManager(String nric, String name, int age, String maritalStatus, String password) {
