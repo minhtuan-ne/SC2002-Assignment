@@ -6,7 +6,7 @@ import main.models.BTOProject;
 import java.util.List;
 
 public interface IApplicantService {
-    void apply(Applicant applicant, BTOProject project, String flatType);
+    boolean apply(Applicant applicant, BTOProject project, String flatType);
     boolean hasApplied(Applicant applicant);
     Application getApplication(String nric);
     void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects);

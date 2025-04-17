@@ -16,10 +16,11 @@ public class EnquiryService implements IEnquiryService {
 
     @Override
     public void submitEnquiry(Applicant applicant, String projectName, String message) {
-        String enquiryId = UUID.randomUUID().toString();
-        Enquiry e = new Enquiry(enquiryId, applicant.getNRIC(), projectName, message);
+        String fullId  = UUID.randomUUID().toString();
+        String shortId = fullId.substring(0, 8);
+        Enquiry e       = new Enquiry(shortId, applicant.getNRIC(), projectName, message);
         enquiries.add(e);
-        System.out.println("Enquiry submitted successfully with ID: " + enquiryId);
+        System.out.println("Enquiry submitted successfully with ID: " + shortId);
     }
 
     @Override
@@ -61,5 +62,24 @@ public class EnquiryService implements IEnquiryService {
         }
         System.out.println("Enquiry not found or no permission to edit.");
         return false;
+    }
+
+    @Override
+    public List<Enquiry> getAllEnquiries() {
+        // return a copy so callers can’t mutate our internal list
+        return new ArrayList<>(enquiries);
+    }
+
+    @Override
+    public void replyToEnquiry(String enquiryId, String message) {
+        for (Enquiry e : enquiries) {
+            if (e.getEnquiryId().equals(enquiryId)) {
+                // in a real system you’d persist this reply somewhere;
+                // for now we just print confirmation:
+                System.out.println("Replied to enquiry " + enquiryId + ": " + message);
+                return;
+            }
+        }
+        System.out.println("Enquiry not found: " + enquiryId);
     }
 }

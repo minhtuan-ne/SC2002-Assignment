@@ -2,43 +2,54 @@ package main.services;
 
 import java.util.*;
 import main.models.*;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 
 public class ApplicantService implements IApplicantService {
     private static List<Application> applications = new ArrayList<>();
     private static List<Enquiry> enquiries = new ArrayList<>();
 
     @Override
-    public void apply(Applicant applicant, BTOProject project, String flatType) {
+    public boolean apply(Applicant applicant, BTOProject project, String flatType) {
+        if (project == null) {
+            System.out.println("Project not found.");
+            return false;
+        }
+        // ... user already applied?
         if (hasApplied(applicant)) {
             System.out.println("You already have an active application.");
-            return;
+            return false;
         }
 
-        boolean isSingle = applicant.getMaritalStatus().equalsIgnoreCase("Single");
+        boolean isSingle  = applicant.getMaritalStatus().equalsIgnoreCase("Single");
         boolean isMarried = applicant.getMaritalStatus().equalsIgnoreCase("Married");
-        int age = applicant.getAge();
+        int     age       = applicant.getAge();
 
+        // enforce flat‑type rules:
         if (flatType.equalsIgnoreCase("2-room")) {
             if (!(isSingle && age >= 35) && !(isMarried && age >= 21)) {
-                System.out.println("Only singles aged 35+ or married applicants aged 21+ can apply for 2-room flats.");
-                return;
+                System.out.println("Only singles 35+ or married 21+ can apply for 2-room flats.");
+                return false;
             }
-        } else if (flatType.equalsIgnoreCase("3-room")) {
+        }
+        else if (flatType.equalsIgnoreCase("3-room")) {
             if (!(isMarried && age >= 21)) {
-                System.out.println("Only married applicants aged 21+ can apply for 3-room flats.");
-                return;
+                System.out.println("Only married applicants 21+ can apply for 3-room flats.");
+                return false;
             }
-        } else {
+        }
+        else {
             System.out.println("Invalid flat type.");
-            return;
+            return false;
         }
 
+        // passed all checks:
         Application application = new Application(applicant, project.getProjectName(), flatType);
         applications.add(application);
         project.addApplication(application);
         System.out.println("Application submitted successfully.");
+        return true;
     }
-
     @Override
     public boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
@@ -51,9 +62,13 @@ public class ApplicantService implements IApplicantService {
 
     @Override
     public Application getApplication(String nric) {
-        for (Application a : applications) {
-            if (a.getApplicant().getNRIC().equals(nric)) {
-                return a;
+        // scan from the end so we pick up the most‐recent application first
+        for (int i = applications.size() - 1; i >= 0; i--) {
+            Application a = applications.get(i);
+            if (a.getApplicant().getNRIC().equals(nric)
+                // ignore any withdrawn/unsuccessful apps
+                && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
+            return a;
             }
         }
         return null;
@@ -70,12 +85,14 @@ public class ApplicantService implements IApplicantService {
         System.out.println("Status: " + app.getStatus());
         System.out.println("Flat Type: " + app.getFlatType());
 
+        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+
         for (BTOProject p : allProjects) {
             if (p.getProjectName().equals(app.getProjectName())) {
                 System.out.println("Project Name: " + p.getProjectName());
                 System.out.println("Neighborhood: " + p.getNeighborhood());
-                System.out.println("Application Period: " + p.getStartDate() + " to " + p.getEndDate());
-                System.out.println("Manager: " + p.getManager().getNRIC());
+                System.out.println("Application Period: " + df.format(p.getStartDate()) + " to " + df.format(p.getEndDate()));
+                System.out.println("Manager: " + p.getManager().getName());
                 return;
             }
         }
@@ -121,10 +138,10 @@ public class ApplicantService implements IApplicantService {
     }
 
     public static void submitEnquiry(Applicant applicant, String projectName, String message) {
-        String enquiryId = UUID.randomUUID().toString();
+        String enquiryId = UUID.randomUUID().toString().substring(0, 8);
         Enquiry enquiry = new Enquiry(enquiryId, applicant.getNRIC(), projectName, message);
         enquiries.add(enquiry);
-        System.out.println("Enquiry submitted successfully.");
+        System.out.println("Enquiry submitted successfully. ID: " + enquiryId);
     }
 
     public static List<Enquiry> getApplicantEnquiries(Applicant applicant) {

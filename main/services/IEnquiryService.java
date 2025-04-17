@@ -9,4 +9,6 @@ public interface IEnquiryService {
     List<Enquiry> getApplicantEnquiries(Applicant applicant);
     boolean deleteEnquiry(Applicant applicant, String enquiryId);
     boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage);
+    List<Enquiry> getAllEnquiries();
+    void replyToEnquiry(String enquiryId, String message);
 }
