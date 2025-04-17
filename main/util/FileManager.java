@@ -10,30 +10,30 @@ import java.util.Scanner;
 public class FileManager {
   private HashMap<String, List<List<String>>> DatabyRole = new HashMap<String, List<List<String>>>();
 
-  public List<List<String>> readFile(String fileName) {
+    public List<List<String>> readFile(String fileName) {
     List<List<String>> FileList = new ArrayList<>();
     try {
       File myObj = new File("./data/" + fileName);
       Scanner myReader = new Scanner(myObj);
-
+  
       boolean isFirstLine = true;
       while (myReader.hasNextLine()) {
         String data = myReader.nextLine().trim();
-
+  
         if (isFirstLine) {
           isFirstLine = false;
           continue;
         }
-
+  
         if (!data.isEmpty()) {
-          String[] splitData = data.split("\\s+");
-          List<String> applicantData = new ArrayList<>();
-
+          String[] splitData = data.split("\t");  // <-- Use tab as delimiter
+          List<String> row = new ArrayList<>();
+  
           for (String field : splitData) {
-            applicantData.add(field);
+            row.add(field.trim());
           }
-
-          FileList.add(applicantData);
+  
+          FileList.add(row);
         }
       }
       myReader.close();
@@ -42,8 +42,8 @@ public class FileManager {
       e.printStackTrace();
     }
     return FileList;
-  }
-
+  }  
+  
   public HashMap<String, List<List<String>>> getDatabyRole() {
     DatabyRole.put("Applicant", readFile("ApplicantList.txt"));
     DatabyRole.put("Manager", readFile("ManagerList.txt"));
