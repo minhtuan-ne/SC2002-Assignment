@@ -86,6 +86,8 @@ public class BTOApp {
             List<BTOProject> projects = FileManager.loadProjects(UserRepository.getUserDatabase());
             for (BTOProject project : projects) {
                 ProjectRepository.addProject(project);
+                project.getManager().addProject(project);
+
             }
             System.out.println("Loaded " + projects.size() + " projects.");
             
@@ -439,6 +441,7 @@ public class BTOApp {
             System.out.println("ID: " + e.getEnquiryId());
             System.out.println("Project: " + e.getProjectName());
             System.out.println("Message: " + e.getMessage());
+            System.out.println("Message: " + e.getReply());
             System.out.println();
         }
     }
