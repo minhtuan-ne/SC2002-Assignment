@@ -3,6 +3,7 @@ package main.services;
 import main.models.HDBManager;
 import main.models.BTOProject;
 import main.models.HDBOfficer;
+import main.models.Applicant;
 import main.models.Application;
 
 import java.util.Date;
@@ -37,9 +38,12 @@ public interface IHDBManagerService {
 
     boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer);
 
-    boolean handleBTOApplication(HDBManager manager, Application application);
+    boolean handleBTOApplication(HDBManager manager, Application application, boolean approve);
 
     void handleWithdrawal(HDBManager manager, Application application);
 
     void bookingReport(HDBManager manager, String filter);
+
+    boolean changePassword(HDBManager manager, String oldPassword, String newPassword);
+
 }
