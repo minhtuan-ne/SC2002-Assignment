@@ -25,8 +25,36 @@ public class FileManager implements IFileManager {
                     continue;
                 }
                 if (!data.isEmpty()) {
-                    String[] splitData = data.split("\\s+");
-                    fileList.add(Arrays.asList(splitData));
+                    // Split by tab or multiple spaces
+                    String[] rawSplitData = data.split("\\s+");
+                    List<String> rowData = new ArrayList<>();
+                    
+                    // Process the split data to handle comma-separated values
+                    StringBuilder currentField = new StringBuilder();
+                    for (String field : rawSplitData) {
+                        // If we have an incomplete field (ends with comma)
+                        if (!currentField.isEmpty()) {
+                            currentField.append(" ").append(field);
+                            // If this field doesn't end with comma, we're done with this merged field
+                            if (!field.endsWith(",")) {
+                                rowData.add(currentField.toString());
+                                currentField = new StringBuilder();
+                            }
+                        } else if (field.endsWith(",")) {
+                            // Start of a potential multi-part field
+                            currentField.append(field);
+                        } else {
+                            // Normal field
+                            rowData.add(field);
+                        }
+                    }
+                    
+                    // Add any remaining field
+                    if (!currentField.isEmpty()) {
+                        rowData.add(currentField.toString());
+                    }
+                    
+                    fileList.add(rowData);
                 }
             }
             myReader.close();
@@ -72,5 +100,5 @@ public class FileManager implements IFileManager {
         }
         lines.add(0, header);
         Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
-}
+    }
 }

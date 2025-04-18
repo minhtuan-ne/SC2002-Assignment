@@ -3,16 +3,21 @@ package main.services;
 
 import main.models.*;
 import main.repositories.IProjectRepository;
+import main.util.IFileManager;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class HDBManagerService implements IHDBManagerService {
+    private final IFileManager fileManager;
     private final IProjectRepository projectRepository;
 
-    public HDBManagerService(IProjectRepository projectRepository) {
+    public HDBManagerService(IProjectRepository projectRepository, IFileManager fileManager) {
         this.projectRepository = projectRepository;
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -24,20 +29,23 @@ public class HDBManagerService implements IHDBManagerService {
                                  List<String> flatTypes,
                                  int twoRoomUnits,
                                  int threeRoomUnits) {
-
-        // Check for overlapping projects
+    
+        // Only check overlapping projects that this manager is handling
         for (BTOProject p : projectRepository.getAllProjects()) {
-            if (startDate.before(p.getEndDate()) && endDate.after(p.getStartDate())) {
-                // Overlap found
-                return false;
+            if (p.getManager().equals(manager)) {
+                if (!endDate.before(p.getStartDate()) && !startDate.after(p.getEndDate())) {
+                    // Overlapping project found for this manager
+                    return false;
+                }
             }
         }
+    
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10);
         projectRepository.addProject(newProject);
         manager.addProject(newProject);
         return true;
     }
-
+    
     @Override
     public List<BTOProject> viewAllProjects() {
         return projectRepository.getAllProjects();
@@ -45,7 +53,21 @@ public class HDBManagerService implements IHDBManagerService {
 
     @Override
     public List<BTOProject> viewOwnProjects(HDBManager manager) {
-        return manager.getProjects();
+       
+        List<BTOProject> ownProjects = manager.getProjects();
+        
+        if (ownProjects.isEmpty()) {
+            ownProjects = projectRepository.getAllProjects().stream()
+                .filter(p -> p.getManager().getNRIC().equals(manager.getNRIC()))
+                .collect(Collectors.toList());
+            
+            // Update manager's personal list for future use
+            for (BTOProject p : ownProjects) {
+                manager.addProject(p);
+            }
+        }
+        
+        return ownProjects;
     }
 
     @Override
@@ -96,28 +118,50 @@ public class HDBManagerService implements IHDBManagerService {
         }
         return false;
     }
-
     @Override
-    public boolean handleBTOApplication(HDBManager manager, Application application) {
+    public boolean handleBTOApplication(HDBManager manager, Application application, boolean approve) {
         String projectName = application.getProjectName();
+        
+        // Find the correct project
+        BTOProject matchingProject = null;
         for (BTOProject project : projectRepository.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
-                if (!project.getManager().equals(manager)) {
-                    return false;
-                }
-                String flatType = application.getFlatType();
-                int available = project.getUnits(flatType);
-                if (available > 0) {
-                    // E.g. set status or reduce units
-                    application.setStatus("Successful");
-                    project.setUnits(flatType, available - 1);
-                    return true;
-                }
+                matchingProject = project;
+                break;
             }
         }
-        return false;
+        
+        if (matchingProject == null) {
+            return false;
+        }
+        
+        // Check if manager has permission to manage this project
+        if (!matchingProject.getManager().getNRIC().equals(manager.getNRIC())) {
+            return false;
+        }
+        
+        if (approve) {
+            // Check available units before approving
+            String flatType = application.getFlatType();
+            int available = matchingProject.getUnits(flatType);
+            
+            if (available > 0) {
+                // Update application status
+                application.setStatus("Successful");
+                
+                // Reduce available units
+                matchingProject.setUnits(flatType, available - 1);
+                return true;
+            } else {
+                return false;  // No units available to approve
+            }
+        } else {
+            // Reject the application
+            application.setStatus("Unsuccessful");
+            return true;  // Rejection is always successful
+        }
     }
-
+    
     @Override
     public void handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
@@ -151,6 +195,24 @@ public class HDBManagerService implements IHDBManagerService {
                         + ", Marital status: " + application.getApplicant().getMaritalStatus());
                 }
             }
+        }
+    }
+
+    @Override
+    public boolean changePassword(HDBManager manager, String oldPassword, String newPassword) {
+        try {
+            // 1) update in‑memory
+            manager.changePassword(oldPassword, newPassword);
+            // 2) persist to disk
+            fileManager.updatePassword("Manager", manager.getNRIC(), newPassword);
+            System.out.println("Password changed successfully.");
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+            return false;
+        } catch (IOException ioe) {
+            System.out.println("Failed to save new password: " + ioe.getMessage());
+            return false;
         }
     }
 }
