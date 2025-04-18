@@ -12,4 +12,5 @@ public interface IApplicantService {
     void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects);
     boolean requestWithdrawal(Applicant applicant);
     List<BTOProject> viewAvailableProjects(Applicant applicant, List<BTOProject> allProjects);
+    boolean changePassword(Applicant applicant, String oldPassword, String newPassword);
 }

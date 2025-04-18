@@ -2,13 +2,20 @@ package main.services;
 
 import java.util.*;
 import main.models.*;
+import main.util.IFileManager;
+
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 
 public class ApplicantService implements IApplicantService {
+    private final IFileManager fileManager;
     private static List<Application> applications = new ArrayList<>();
     private static List<Enquiry> enquiries = new ArrayList<>();
 
+    public ApplicantService(IFileManager fileManager){
+        this.fileManager = fileManager;
+    }
     @Override
     public boolean apply(Applicant applicant, BTOProject project, String flatType) {
         if (project == null) {
@@ -178,5 +185,23 @@ public class ApplicantService implements IApplicantService {
         }
         System.out.println("Enquiry not found or you don't have permission to edit it.");
         return false;
+    }
+
+    @Override
+    public boolean changePassword(Applicant applicant, String oldPassword, String newPassword) {
+        try {
+            // 1) update in‑memory
+            applicant.changePassword(oldPassword, newPassword);
+            // 2) persist to disk
+            fileManager.updatePassword("Applicant", applicant.getNRIC(), newPassword);
+            System.out.println("Password changed successfully.");
+            return true;
+        } catch (IllegalArgumentException e) {
+            System.out.println("Error: " + e.getMessage());
+            return false;
+        } catch (IOException ioe) {
+            System.out.println("Failed to save new password: " + ioe.getMessage());
+            return false;
+        }
     }
 }

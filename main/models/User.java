@@ -59,4 +59,8 @@ public abstract class User {
         return String.format("Name: %s | NRIC: %s | Age: %d | Marital Status: %s | Role: %s",
                              name, nric, age, maritalStatus, getRole());
     }
+
+    public String getPassword() {
+        return this.password;
+    }
 }
