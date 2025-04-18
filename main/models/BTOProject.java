@@ -151,4 +151,11 @@ public class BTOProject {
             // If more flat types exist, handle them accordingly
         }
     }
+
+    public boolean decrementFlatCount(String type) {
+        int remain = getUnits(type);
+        if (remain <= 0) return false;
+        setUnits(type, remain - 1);   // create setUnits(..) if missing
+        return true;
+    }
 }

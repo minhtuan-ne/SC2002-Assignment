@@ -7,4 +7,8 @@ public class Applicant extends User {
 
     @Override
     public String getRole() { return "Applicant"; }
+    private String flatType = "-";
+
+    public void setFlatType(String flatType) { this.flatType = flatType; }
+    public String getFlatType()              { return flatType; }
 }
