@@ -163,22 +163,17 @@ public class FileManager implements IFileManager {
    
     public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName, boolean isAssigning) {
         try {
-            Path path = Paths.get("data", "ProjectList.txt");
+            Path path = Paths.get("./data", "ProjectList.txt");
             if (!Files.exists(path)) {
-                System.out.println("DEBUG: ProjectList.txt file not found at " + path.toAbsolutePath());
+                System.out.println("ProjectList.txt file not found at " + path.toAbsolutePath());
                 return false;
             }
             
-            // Read all lines from the file
             List<String> lines = Files.readAllLines(path);
             if (lines.isEmpty()) {
-                System.out.println("DEBUG: ProjectList.txt file is empty");
+                System.out.println("ProjectList.txt file is empty");
                 return false;
             }
-            
-            System.out.println("DEBUG: Found " + lines.size() + " lines in file");
-            System.out.println("DEBUG: Action: " + (isAssigning ? "Assigning" : "Removing") + 
-                               " officer " + officerName + " to/from project " + projectName);
             
             boolean projectFound = false;
             int projectLineIndex = -1;
@@ -189,23 +184,24 @@ public class FileManager implements IFileManager {
                 if (cols.length > 0 && cols[0].equalsIgnoreCase(projectName)) {
                     projectFound = true;
                     projectLineIndex = i;
-                    System.out.println("DEBUG: Found project at line " + i + ": " + lines.get(i));
                     break;
                 }
             }
             
             if (!projectFound) {
-                System.out.println("DEBUG: Project not found: " + projectName);
+                System.out.println("Project not found: " + projectName);
                 return false;
             }
             
             // Get the project line and its components
-            String[] cols = lines.get(projectLineIndex).split("\\t");
-            System.out.println("DEBUG: Project line has " + cols.length + " columns");
+            String line = lines.get(projectLineIndex);
+            String[] cols = line.split("\\t");
             
             // Parse the officers column (last column)
-            String assignedOfficers = cols.length > 12 ? cols[12] : "";
-            System.out.println("DEBUG: Current officers: " + assignedOfficers);
+            String assignedOfficers = "";
+            if (cols.length > 12) {
+                assignedOfficers = cols[12];
+            }
             
             List<String> officerList = new ArrayList<>();
             if (!assignedOfficers.isEmpty()) {
@@ -217,7 +213,16 @@ public class FileManager implements IFileManager {
                     }
                 }
             }
-            System.out.println("DEBUG: Parsed officer list: " + officerList);
+            
+            // Get current officer slot count
+            int currentOfficerSlot = 10; // Default
+            if (cols.length > 11) {
+                try {
+                    currentOfficerSlot = Integer.parseInt(cols[11].trim());
+                } catch (NumberFormatException e) {
+                    System.out.println("Warning: Invalid officer slot number: " + cols[11]);
+                }
+            }
             
             boolean changed = false;
             
@@ -225,58 +230,54 @@ public class FileManager implements IFileManager {
             if (isAssigning) {
                 if (!officerList.contains(officerName)) {
                     officerList.add(officerName);
+                    // Update the officer slot count
+                    currentOfficerSlot = Math.max(currentOfficerSlot, officerList.size());
                     changed = true;
-                    System.out.println("DEBUG: Added officer " + officerName);
                 } else {
-                    System.out.println("DEBUG: Officer already in list");
+                    System.out.println("Officer already assigned to this project");
                     return false;
                 }
             } else { // removing
                 if (officerList.contains(officerName)) {
                     officerList.remove(officerName);
                     changed = true;
-                    System.out.println("DEBUG: Removed officer " + officerName);
+                    // We don't decrease the officer slot count when removing
                 } else {
-                    System.out.println("DEBUG: Officer not found in list");
+                    System.out.println("Officer not found in project");
                     return false;
                 }
             }
             
             if (!changed) {
-                System.out.println("DEBUG: No changes made to officer list");
                 return false;
             }
             
-            // Create a new line
+            // Build a new line preserving all columns up to Manager (index 10)
             StringBuilder newLine = new StringBuilder();
-            for (int i = 0; i < Math.min(cols.length, 12); i++) {
+            
+            // Add all columns up to Manager (index 10)
+            for (int i = 0; i < Math.min(11, cols.length); i++) {
                 newLine.append(cols[i]).append("\t");
             }
             
-            // Add officer slot column if needed
-            if (cols.length > 11) {
-                newLine.append(cols[11]);
-            } else {
-                newLine.append("10"); // Default max officers
-            }
+            // Add the updated Officer Slot (index 11)
+            newLine.append(currentOfficerSlot);
             
             // Add the updated officer list
             if (!officerList.isEmpty()) {
                 newLine.append("\t").append(String.join(", ", officerList));
             }
             
-            System.out.println("DEBUG: New line: " + newLine.toString());
-            
             // Update the line in the file
             lines.set(projectLineIndex, newLine.toString());
             
             // Write all lines back to the file
             Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
-            System.out.println("DEBUG: File updated successfully");
+            System.out.println("Project updated successfully");
             
             return true;
         } catch (Exception e) {
-            System.out.println("DEBUG: Exception occurred: " + e.getMessage());
+            System.out.println("Exception occurred: " + e.getMessage());
             e.printStackTrace();
             return false;
         }

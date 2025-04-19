@@ -196,6 +196,8 @@ public class HDBManagerService implements IHDBManagerService {
         }
 
         officer.approveRegistration(project.getProjectName());
+        // Update the project file with the new officer assignment
+        fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officer.getName(), true);
         project.removePendingRegistration(officer);    // ✅ remove from pending list
         project.getHDBOfficers().add(officer);         // ✅ add to approved list
         System.out.println("Officer registration approved.");
@@ -290,7 +292,7 @@ public class HDBManagerService implements IHDBManagerService {
   
     @Override
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC) {
-        if (project.getManager().equals(manager)) {
+        if (project.getManagerNRIC().equals(manager.getNRIC())) {
             project.addAssignedOfficer(officerNRIC);
             
             // Need to get officer name to match the format in the file

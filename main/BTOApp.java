@@ -392,7 +392,7 @@ public class BTOApp {
                         if (success) {
                             System.out.println("Project created successfully.");
                         } else {
-                            System.out.println("Failed to create project. You still have a visible project, or the dates are wrong");
+                            System.out.println("Failed to create project. You still have a visible project, or the dates are wrong.");
                         }
                     } catch (Exception e) {
                         System.out.println("Error: " + e.getMessage());
