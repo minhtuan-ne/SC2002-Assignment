@@ -163,80 +163,118 @@ public class FileManager implements IFileManager {
         try {
             Path path = Paths.get("data", "ProjectList.txt");
             if (!Files.exists(path)) {
-                System.out.println("ProjectList.txt file not found.");
+                System.out.println("DEBUG: ProjectList.txt file not found at " + path.toAbsolutePath());
                 return false;
             }
             
+            // Read all lines from the file
             List<String> lines = Files.readAllLines(path);
             if (lines.isEmpty()) {
-                System.out.println("ProjectList.txt file is empty.");
+                System.out.println("DEBUG: ProjectList.txt file is empty");
                 return false;
             }
             
+            System.out.println("DEBUG: Found " + lines.size() + " lines in file");
+            System.out.println("DEBUG: Action: " + (isAssigning ? "Assigning" : "Removing") + 
+                               " officer " + officerName + " to/from project " + projectName);
+            
             boolean projectFound = false;
-            for (int i = 1; i < lines.size(); i++) {
-                String line = lines.get(i);
-                String[] cols = line.split("\\t");
-                
-                // Check for project by name (first column)
+            int projectLineIndex = -1;
+            
+            // Find the project line
+            for (int i = 0; i < lines.size(); i++) {
+                String[] cols = lines.get(i).split("\\t");
                 if (cols.length > 0 && cols[0].equalsIgnoreCase(projectName)) {
                     projectFound = true;
-                    
-                    // Get existing assigned officers (last column, index 12)
-                    String assignedOfficers = cols.length > 12 ? cols[12] : "";
-                    List<String> officerList = new ArrayList<>();
-                    
-                    if (!assignedOfficers.isEmpty()) {
-                        // Parse the existing list of officers
-                        String[] officers = assignedOfficers.split(",");
-                        for (String officer : officers) {
-                            officerList.add(officer.trim());
-                        }
-                    }
-                    
-                    if (isAssigning) {
-                        // Add officer if not already in the list
-                        if (!officerList.contains(officerName)) {
-                            officerList.add(officerName);
-                        } else {
-                            System.out.println("Officer already assigned to this project.");
-                            return false;
-                        }
-                    } else {
-                        // Remove officer from the list
-                        if (officerList.contains(officerName)) {
-                            officerList.remove(officerName);
-                        } else {
-                            System.out.println("Officer not found in project's assigned officers.");
-                            return false;
-                        }
-                    }
-                    
-                    // Rebuild the officer list string
-                    String updatedOfficerList = String.join(",", officerList);
-                    
-                    // Rebuild the line with the updated officer list
-                    StringBuilder updatedLine = new StringBuilder();
-                    for (int j = 0; j < cols.length - 1; j++) {
-                        updatedLine.append(cols[j]).append("\t");
-                    }
-                    updatedLine.append(updatedOfficerList);
-                    
-                    lines.set(i, updatedLine.toString());
+                    projectLineIndex = i;
+                    System.out.println("DEBUG: Found project at line " + i + ": " + lines.get(i));
                     break;
                 }
             }
             
             if (!projectFound) {
-                System.out.println("Project not found: " + projectName);
+                System.out.println("DEBUG: Project not found: " + projectName);
                 return false;
             }
             
+            // Get the project line and its components
+            String[] cols = lines.get(projectLineIndex).split("\\t");
+            System.out.println("DEBUG: Project line has " + cols.length + " columns");
+            
+            // Parse the officers column (last column)
+            String assignedOfficers = cols.length > 12 ? cols[12] : "";
+            System.out.println("DEBUG: Current officers: " + assignedOfficers);
+            
+            List<String> officerList = new ArrayList<>();
+            if (!assignedOfficers.isEmpty()) {
+                String[] officers = assignedOfficers.split(",");
+                for (String officer : officers) {
+                    String trimmedOfficer = officer.trim();
+                    if (!trimmedOfficer.isEmpty()) {
+                        officerList.add(trimmedOfficer);
+                    }
+                }
+            }
+            System.out.println("DEBUG: Parsed officer list: " + officerList);
+            
+            boolean changed = false;
+            
+            // Handle assignment or removal
+            if (isAssigning) {
+                if (!officerList.contains(officerName)) {
+                    officerList.add(officerName);
+                    changed = true;
+                    System.out.println("DEBUG: Added officer " + officerName);
+                } else {
+                    System.out.println("DEBUG: Officer already in list");
+                    return false;
+                }
+            } else { // removing
+                if (officerList.contains(officerName)) {
+                    officerList.remove(officerName);
+                    changed = true;
+                    System.out.println("DEBUG: Removed officer " + officerName);
+                } else {
+                    System.out.println("DEBUG: Officer not found in list");
+                    return false;
+                }
+            }
+            
+            if (!changed) {
+                System.out.println("DEBUG: No changes made to officer list");
+                return false;
+            }
+            
+            // Create a new line
+            StringBuilder newLine = new StringBuilder();
+            for (int i = 0; i < Math.min(cols.length, 12); i++) {
+                newLine.append(cols[i]).append("\t");
+            }
+            
+            // Add officer slot column if needed
+            if (cols.length > 11) {
+                newLine.append(cols[11]);
+            } else {
+                newLine.append("10"); // Default max officers
+            }
+            
+            // Add the updated officer list
+            if (!officerList.isEmpty()) {
+                newLine.append("\t").append(String.join(", ", officerList));
+            }
+            
+            System.out.println("DEBUG: New line: " + newLine.toString());
+            
+            // Update the line in the file
+            lines.set(projectLineIndex, newLine.toString());
+            
+            // Write all lines back to the file
             Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
-            System.out.println("Project officer list updated successfully.");
+            System.out.println("DEBUG: File updated successfully");
+            
             return true;
-        } catch (IOException e) {
-            System.out.println("Error updating project officer list: " + e.getMessage());
+        } catch (Exception e) {
+            System.out.println("DEBUG: Exception occurred: " + e.getMessage());
             e.printStackTrace();
             return false;
         }
