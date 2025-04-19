@@ -65,7 +65,9 @@ public class BTOApp {
                                     applicantSvc,
                                     enquirySvc,
                                     projectRepo.getAllProjects(),
-                                    sc);
+                                    sc,
+                                    auth,
+                                    fileManager);
                             break;
                         default:
                             System.out.println("Unknown role: " + user.getRole());
@@ -909,12 +911,9 @@ public class BTOApp {
     // ------------------------------------------------------------------------
     // Officer menu loop
     // ------------------------------------------------------------------------
-    private static void runOfficerLoop(HDBOfficer me,
-                                       IHDBOfficerService svc,
-                                       IApplicantService  applicantSvc,
-                                       IEnquiryService    enquirySvc,
-                                       List<BTOProject>   projects,
-                                       Scanner sc) {
+    public static void runOfficerLoop(HDBOfficer me, IHDBOfficerService svc, IApplicantService applicantSvc,
+                                      IEnquiryService enquirySvc, List<BTOProject> projects,
+                                      Scanner sc, Authenticator auth, IFileManager fileManager) {
 
         while (true) {
 
@@ -1019,7 +1018,17 @@ public class BTOApp {
                     break;
 
                 /* 0 ─ Logout */
-                case "0":
+                case "0": {
+                    // Save officer state upon logout
+                    List<HDBOfficer> officers = auth.getUsers().stream()
+                            .filter(u -> u instanceof HDBOfficer)
+                            .map(u -> (HDBOfficer) u)
+                            .collect(Collectors.toList());
+
+                    fileManager.saveOfficersToFile("data/OfficerList.txt", officers);
+
+                    System.out.println("Logging out...");
+                }
                     return;
 
                 default:
