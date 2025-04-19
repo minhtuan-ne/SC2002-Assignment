@@ -136,8 +136,8 @@ public class HDBManagerService implements IHDBManagerService {
 
     @Override
     public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
-        if (!project.getManager().equals(manager)) {
-            //System.out.println("Wrong Manager.");
+        if (!project.getManager().getNRIC().equalsIgnoreCase(manager.getNRIC())) {
+            System.out.println("Wrong Manager.");
             return false;
         }
 

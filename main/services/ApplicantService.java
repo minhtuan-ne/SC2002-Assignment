@@ -142,15 +142,31 @@ public class ApplicantService implements IApplicantService {
             if (!project.isVisible()) continue;
             if (today.before(project.getStartDate()) || today.after(project.getEndDate())) continue;
 
+            // HDBOfficer logic — allow viewing if not handling this project
+            if (applicant instanceof HDBOfficer officer) {
+                if (officer.isHandlingProject()
+                        && project.getProjectName().equalsIgnoreCase(officer.getHandlingProjectId())) {
+                    continue;  //  Don't show the project the officer is handling
+                }
+
+                // Officer can view any visible, open project
+                if (project.getUnits("2-room") > 0 || project.getUnits("3-room") > 0) {
+                    result.add(project);
+                    continue;
+                }
+            }
+
+            // Applicant logic
             boolean isSingle = applicant.getMaritalStatus().equalsIgnoreCase("Single") && applicant.getAge() >= 35;
             boolean isMarried = applicant.getMaritalStatus().equalsIgnoreCase("Married") && applicant.getAge() >= 21;
 
-            if (isSingle && project.getUnits("2-room") > 0) {
-                result.add(project);
-            } else if (isMarried && (project.getUnits("2-room") > 0 || project.getUnits("3-room") > 0)) {
+            if ((isSingle && project.getUnits("2-room") > 0)
+                    || (isMarried && project.getUnits("2-room") > 0)
+                    || (isMarried && project.getUnits("3-room") > 0)) {
                 result.add(project);
             }
         }
+
         return result;
     }
 
