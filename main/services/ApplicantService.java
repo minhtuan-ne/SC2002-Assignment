@@ -84,7 +84,7 @@ public class ApplicantService implements IApplicantService {
             Application a = applications.get(i);
             if (a.getApplicant().getNRIC().equals(nric)
                 // ignore any withdrawn/unsuccessful apps
-                && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
+                && !a.getStatus().equalsIgnoreCase("Withdrawn")) {
             return a;
             }
         }
