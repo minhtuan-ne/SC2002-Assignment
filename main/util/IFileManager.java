@@ -15,6 +15,10 @@ public interface IFileManager {
 
     void updatePassword(String role, String nric, String newPassword) throws IOException;
 
+    List<HDBOfficer> loadOfficersFromFile(String path);
+    
+    void saveOfficersToFile(String path, List<HDBOfficer> officers);
+
     boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
                       Date startDate, Date endDate, List<String> flatTypes,
                       int twoRoomUnits, int threeRoomUnits,
