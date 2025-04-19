@@ -34,7 +34,7 @@ public class BTOApp {
         // 3) Services
         IHDBManagerService  managerSvc   = new HDBManagerService(projectRepo, fileManager);
         IEnquiryService enquirySvc    = new EnquiryService();
-        IApplicantService applicantSvc = new ApplicantService(fileManager);
+        IApplicantService applicantSvc = new ApplicantService(fileManager, enquirySvc);
         IHDBOfficerService officerSvc =
                 new HDBOfficerService((ProjectRepository) projectRepo, (EnquiryService) enquirySvc, (ApplicantService) applicantSvc);
 
@@ -250,16 +250,49 @@ public class BTOApp {
                     svc.requestWithdrawal(me);
                     break;
                 case "5": {
-                    System.out.print("Project name: ");
-                    String pname = sc.nextLine();
+                    // 1) get only those projects currently open & visible
+                    List<BTOProject> available = svc.viewAvailableProjects(me, projects);
+                    if (available.isEmpty()) {
+                        System.out.println("No projects available to submit an enquiry at the moment.");
+                        break;
+                    }
+
+                    // 2) list them out
+                    System.out.println("\n-- Available Projects --");
+                    for (int i = 0; i < available.size(); i++) {
+                        BTOProject p = available.get(i);
+                        System.out.printf("%d) %s - %s%n",
+                            i + 1,
+                            p.getProjectName(),
+                            p.getNeighborhood());
+                    }
+
+                    // 3) let user pick one
+                    System.out.print("Select project (0 to cancel): ");
+                    int projChoice = sc.nextInt();
+                    sc.nextLine();  // consume the '\n'
+                    if (projChoice == 0) {
+                        System.out.println("Enquiry cancelled.");
+                        break;
+                    }
+                    if (projChoice < 1 || projChoice > available.size()) {
+                        System.out.println("Invalid selection.");
+                        break;
+                    }
+                    BTOProject selected = available.get(projChoice - 1);
+
+                    // 4) ask for the message
                     System.out.print("Message: ");
                     String msg = sc.nextLine();
-                    esvc.submitEnquiry(me, pname, msg);
+                    esvc.submitEnquiry(me, selected.getProjectName(), msg);
                     break;
                 }
                 case "6": {
                     for (Enquiry e : esvc.getApplicantEnquiries(me)) {
                         System.out.println(e.getEnquiryId() + ": " + e.getMessage());
+                        if (e.getReply() != null) {
+                            System.out.println("Reply  : " + e.getReply());
+                        }
                     }
                     break;
                 }
@@ -997,7 +1030,7 @@ public class BTOApp {
                     System.out.println("Invalid choice.");
             }
         }
-
+    }
     // ------------------------------------------------------------------------
     // Helper to find a project by name
     // ------------------------------------------------------------------------

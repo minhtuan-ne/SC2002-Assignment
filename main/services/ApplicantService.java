@@ -10,11 +10,13 @@ import java.text.SimpleDateFormat;
 
 public class ApplicantService implements IApplicantService {
     private final IFileManager fileManager;
+    private final IEnquiryService enquiryService;
+    // private static List<Enquiry> enquiries = new ArrayList<>();
     private static List<Application> applications = new ArrayList<>();
-    private static List<Enquiry> enquiries = new ArrayList<>();
 
-    public ApplicantService(IFileManager fileManager){
+    public ApplicantService(IFileManager fileManager, IEnquiryService enquiryService){
         this.fileManager = fileManager;
+        this.enquiryService = enquiryService;
     }
     @Override
     public boolean apply(Applicant applicant, BTOProject project, String flatType) {
@@ -144,47 +146,21 @@ public class ApplicantService implements IApplicantService {
         return result;
     }
 
-    public static void submitEnquiry(Applicant applicant, String projectName, String message) {
-        String enquiryId = UUID.randomUUID().toString().substring(0, 8);
-        Enquiry enquiry = new Enquiry(enquiryId, applicant.getNRIC(), projectName, message);
-        enquiries.add(enquiry);
-        System.out.println("Enquiry submitted successfully. ID: " + enquiryId);
+    // Delegate enquiry ops to the shared service
+    public void submitEnquiry(Applicant applicant, String projectName, String message) {
+        enquiryService.submitEnquiry(applicant, projectName, message);
     }
 
-    public static List<Enquiry> getApplicantEnquiries(Applicant applicant) {
-        List<Enquiry> result = new ArrayList<>();
-        for (Enquiry e : enquiries) {
-            if (e.getUserNric().equals(applicant.getNRIC())) {
-                result.add(e);
-            }
-        }
-        return result;
+    public List<Enquiry> getApplicantEnquiries(Applicant applicant) {
+        return enquiryService.getApplicantEnquiries(applicant);
     }
 
-    public static boolean deleteEnquiry(Applicant applicant, String enquiryId) {
-        Iterator<Enquiry> iterator = enquiries.iterator();
-        while (iterator.hasNext()) {
-            Enquiry e = iterator.next();
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
-                iterator.remove();
-                System.out.println("Enquiry deleted successfully.");
-                return true;
-            }
-        }
-        System.out.println("Enquiry not found or you don't have permission to delete it.");
-        return false;
+    public boolean deleteEnquiry(Applicant applicant, String enquiryId) {
+        return enquiryService.deleteEnquiry(applicant, enquiryId);
     }
 
-    public static boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage) {
-        for (Enquiry e : enquiries) {
-            if (e.getEnquiryId().equals(enquiryId) && e.getUserNric().equals(applicant.getNRIC())) {
-                e.setMessage(newMessage);
-                System.out.println("Enquiry updated successfully.");
-                return true;
-            }
-        }
-        System.out.println("Enquiry not found or you don't have permission to edit it.");
-        return false;
+    public boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage) {
+        return enquiryService.editEnquiry(applicant, enquiryId, newMessage);
     }
 
     @Override

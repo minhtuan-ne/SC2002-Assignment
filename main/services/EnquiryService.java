@@ -76,6 +76,7 @@ public class EnquiryService implements IEnquiryService {
             if (e.getEnquiryId().equals(enquiryId)) {
                 // in a real system you’d persist this reply somewhere;
                 // for now we just print confirmation:
+                e.setReply(message);
                 System.out.println("Replied to enquiry " + enquiryId + ": " + message);
                 return;
             }
