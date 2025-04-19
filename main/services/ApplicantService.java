@@ -20,6 +20,14 @@ public class ApplicantService implements IApplicantService {
     }
     @Override
     public boolean apply(Applicant applicant, BTOProject project, String flatType) {
+        //if officer apply, check if managing the project
+        if (applicant instanceof HDBOfficer officer) {
+            if (officer.isHandlingProject()
+                    && project.getProjectName().equalsIgnoreCase(officer.getHandlingProjectId())) {
+                System.out.println("As an HDB Officer, you cannot apply for the project you are handling.");
+                return false;
+            }
+        }
         if (project == null) {
             System.out.println("Project not found.");
             return false;

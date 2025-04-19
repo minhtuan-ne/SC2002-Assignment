@@ -114,14 +114,28 @@ public class HDBManagerService implements IHDBManagerService {
     @Override
     public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (!project.getManager().equals(manager)) {
+            //System.out.println("Wrong Manager.");
             return false;
         }
-        if (project.getHDBOfficers().size() < project.getMaxOfficers()) {
-            project.getHDBOfficers().add(officer);
-            return true;
+
+        if (!officer.isRegistrationPending()
+                || !project.getProjectName().equalsIgnoreCase(officer.getHandlingProjectId())) {
+            System.out.println("No pending registration from this officer for this project.");
+            return false;
         }
-        return false;
+
+        if (project.getHDBOfficers().size() >= project.getMaxOfficers()) {
+            System.out.println("Project has reached max officer capacity.");
+            return false;
+        }
+
+        officer.approveRegistration(project.getProjectName());
+        project.removePendingRegistration(officer);    // ✅ remove from pending list
+        project.getHDBOfficers().add(officer);         // ✅ add to approved list
+        System.out.println("Officer registration approved.");
+        return true;
     }
+
     @Override
     public boolean handleBTOApplication(HDBManager manager, Application application, boolean approve) {
         String projectName = application.getProjectName();

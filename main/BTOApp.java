@@ -567,106 +567,90 @@ public class BTOApp {
                     System.out.printf("Project is now %s.%n", newVisibility ? "visible" : "hidden");
                     break;
                 }
-                
-                case "7": { // View pending officer registrations - UPDATED
-                    // Get projects from the manager's personal list
+
+                case "7": {
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
-                    
-                    System.out.println("\n====== Projects and Officer Assignments ======");
                     if (myProjects.isEmpty()) {
-                        System.out.println("You have no projects to manage officers for.");
+                        System.out.println("You have no projects.");
                         break;
                     }
-                    
-                    // Access the actual officer data from each project
+
                     for (BTOProject project : myProjects) {
-                        System.out.printf("\nProject: %s (%s)%n", 
-                            project.getProjectName(), project.getNeighborhood());
-                        
-                        List<HDBOfficer> officers = project.getHDBOfficers();
-                        System.out.printf("  Officer utilization: %d of %d slots filled%n", 
-                            officers.size(), project.getMaxOfficers());
-                        
-                        if (officers.isEmpty()) {
-                            System.out.println("  No officers assigned to this project.");
+                        System.out.println("\nProject: " + project.getProjectName());
+                        System.out.println("Assigned Officers:");
+
+                        List<HDBOfficer> assigned = project.getHDBOfficers();
+                        if (assigned.isEmpty()) {
+                            System.out.println("  (none)");
                         } else {
-                            System.out.println("  Assigned officers:");
-                            for (HDBOfficer officer : officers) {
-                                System.out.printf("  - %s (NRIC: %s)%n", 
-                                    officer.getName(), officer.getNRIC());
+                            for (HDBOfficer o : assigned) {
+                                System.out.printf("  - %s (NRIC: %s)\n", o.getName(), o.getNRIC());
+                            }
+                        }
+
+                        System.out.println("Pending Registrations:");
+                        List<HDBOfficer> pending = project.getPendingRegistrations();
+                        if (pending.isEmpty()) {
+                            System.out.println("  (none)");
+                        } else {
+                            for (HDBOfficer o : pending) {
+                                System.out.printf("  - %s (NRIC: %s)\n", o.getName(), o.getNRIC());
                             }
                         }
                     }
                     break;
                 }
-                
-                case "8": { // Approve/reject officer registration - UPDATED
+
+                case "8": {
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
-                        System.out.println("You have no projects to assign officers to.");
+                        System.out.println("You have no projects to manage.");
                         break;
                     }
-                    
-                    System.out.println("\nSelect a project to manage officers for:");
+
+                    System.out.println("Select a project:");
                     for (int i = 0; i < myProjects.size(); i++) {
-                        BTOProject p = myProjects.get(i);
-                        System.out.printf("%d) %s (%d/%d officers)%n", i + 1, 
-                            p.getProjectName(), p.getHDBOfficers().size(), p.getMaxOfficers());
+                        System.out.printf("%d) %s\n", i + 1, myProjects.get(i).getProjectName());
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
-                    BTOProject selected = myProjects.get(projChoice - 1);
-                    
-                    // Simulating officer lookup from a repository
-                    // In a real application, this would be fetched from a database or file
-                    System.out.print("Officer NRIC: ");
-                    String officerNric = sc.nextLine();
-                    
-                    // Check if we already have this officer in the project
-                    boolean officerExists = selected.getHDBOfficers().stream()
-                        .anyMatch(o -> o.getNRIC().equalsIgnoreCase(officerNric));
-                    
-                    if (officerExists) {
-                        System.out.println("This officer is already assigned to the project.");
+
+                    BTOProject project = myProjects.get(projChoice - 1);
+                    List<HDBOfficer> pending = project.getPendingRegistrations();
+
+                    if (pending.isEmpty()) {
+                        System.out.println("No pending officer registrations.");
                         break;
                     }
-                    
-                    // Look for the officer in the user data (would be better with an officer repository)
-                    HDBOfficer officer = null;
-                    for (BTOProject p : repo.getAllProjects()) {
-                        for (HDBOfficer o : p.getHDBOfficers()) {
-                            if (o.getNRIC().equalsIgnoreCase(officerNric)) {
-                                officer = o;
-                                break;
-                            }
-                        }
-                        if (officer != null) break;
+
+                    System.out.println("Pending officers:");
+                    for (int i = 0; i < pending.size(); i++) {
+                        HDBOfficer o = pending.get(i);
+                        System.out.printf("%d) %s (NRIC: %s)\n", i + 1, o.getName(), o.getNRIC());
                     }
-                    
-                    if (officer == null) {
-                        System.out.println("Officer not found. Creating new officer record...");
-                        System.out.print("Officer name: ");
-                        String name = sc.nextLine();
-                        System.out.print("Officer age: ");
-                        int age = Integer.parseInt(sc.nextLine());
-                        System.out.print("Officer marital status: ");
-                        String ms = sc.nextLine();
-                        
-                        // Create a new officer
-                        officer = new HDBOfficer(officerNric, name, age, ms, "password");
+
+                    System.out.print("Select officer to approve (0 to cancel): ");
+                    int officerChoice = Integer.parseInt(sc.nextLine());
+                    if (officerChoice == 0) {
+                        System.out.println("Approval cancelled.");
+                        break;
                     }
-                    
-                    boolean success = svc.handleOfficerRegistration(me, selected, officer);
+                    if (officerChoice < 1 || officerChoice > pending.size()) {
+                        System.out.println("Invalid selection.");
+                        break;
+                    }
+
+                    HDBOfficer selectedOfficer = pending.get(officerChoice - 1);
+                    boolean success = svc.handleOfficerRegistration(me, project, selectedOfficer);
                     if (success) {
-                        System.out.println("Officer added to project successfully!");
+                        System.out.println("Officer approved successfully.");
                     } else {
-                        System.out.println("Failed to add officer to project.");
+                        System.out.println("Approval failed.");
                     }
                     break;
                 }
