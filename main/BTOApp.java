@@ -996,11 +996,61 @@ public class BTOApp {
                         System.out.println("You must be handling a project first.");
                         break;
                     }
-                    System.out.print("Applicant NRIC: ");
-                    String aNric = sc.nextLine();
-                    System.out.print("Flat type (2-room / 3-room): ");
-                    String ftype = sc.nextLine();
-                    svc.bookFlat(aNric, ftype);
+                
+                    // 1) locate the project the officer is handling
+                    BTOProject myProject = svc.viewHandledProject(me);
+                    if (myProject == null) {
+                        System.out.println("Project not found.");
+                        break;
+                    }
+                
+                    // 2) collect all applications for that project in SUCCESSFUL state
+                    List<Application> successApps = new ArrayList<>();
+                    for (Application a : myProject.getApplications()) {
+                        if ("Successful".equalsIgnoreCase(a.getStatus())) {
+                            successApps.add(a);
+                        }
+                    }
+                
+                    if (successApps.isEmpty()) {
+                        System.out.println("There are no applicants in 'Successful' state for booking.");
+                        break;
+                    }
+                
+                    // 3) display list to officer
+                    System.out.println("\nApplicants ready for booking:");
+                    for (int i = 0; i < successApps.size(); i++) {
+                        Application a = successApps.get(i);
+                        System.out.printf("%d) %s  |  %s  |  Flat type: %s\n",
+                                          i + 1,
+                                          a.getApplicant().getName(),
+                                          a.getApplicant().getNRIC(),
+                                          a.getFlatType());
+                    }
+                    System.out.print("Select applicant (0 to cancel): ");
+                    String sel = sc.nextLine().trim();
+                    int idx;
+                    try {
+                        idx = Integer.parseInt(sel);
+                    } catch (NumberFormatException ex) {
+                        System.out.println("Invalid selection.");
+                        break;
+                    }
+                    if (idx == 0) {
+                        System.out.println("Booking cancelled.");
+                        break;
+                    }
+                    if (idx < 1 || idx > successApps.size()) {
+                        System.out.println("Invalid selection.");
+                        break;
+                    }
+                
+                    Application chosen = successApps.get(idx - 1);
+                    String applicantNric = chosen.getApplicant().getNRIC();
+                    String flatType      = chosen.getFlatType();
+                
+                    // 4) delegate to service – it already validates state & units
+                    svc.bookFlat(applicantNric, flatType);
                     break;
                 }
 
