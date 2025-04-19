@@ -51,4 +51,17 @@ public class HDBOfficer extends Applicant {
                         : handlingProjectId;
         return super.toString() + " | Handling: " + s;
     }
+    public void setRegStatus(RegistrationStatus status) {
+        this.regStatus = status;
+    }
+
+    public void setHandlingProjectId(String id) {
+        this.handlingProjectId = id;
+    }
+
+    public String toCSVRow() {
+        return String.join("\t", getName(), getNRIC(), String.valueOf(getAge()),
+                getMaritalStatus(), getPassword(), regStatus.name(),
+                handlingProjectId == null ? "null" : handlingProjectId);
+    }
 }

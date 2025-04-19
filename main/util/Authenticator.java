@@ -10,10 +10,14 @@ import java.util.*;
 public class Authenticator {
     private final IFileManager fileManager;
     private final Scanner sc;
+    private List<User> users = new ArrayList<>();
 
     public Authenticator(IFileManager fileManager) {
         this.fileManager = fileManager;
         this.sc = new Scanner(System.in);
+    }
+    public List<User> getUsers() {
+        return users;
     }
 
     /**
@@ -64,16 +68,31 @@ public class Authenticator {
                     int    age           = Integer.parseInt(record.get(2));
                     String maritalStatus = record.get(3);
 
-                    User u;
+                    User u= null;
                     switch (role) {
                         case "Manager":
                             u = new HDBManager(userID, name, age, maritalStatus, password);
+                            users.add(u);
                             break;
                         case "Officer":
-                            u = new HDBOfficer(userID, name, age, maritalStatus, password);
+                            List<HDBOfficer> officers = fileManager.loadOfficersFromFile("data/OfficerList.txt");
+                            for (HDBOfficer officer : officers) {
+                                if (!officer.getNRIC().equalsIgnoreCase(userID)) continue;
+
+                                foundAny = true;
+                                if (!officer.getPassword().equals(password)) {
+                                    System.out.println("Incorrect password. Please try again.");
+                                    break;
+                                }
+
+                                u = officer;
+                                users.add(u);
+                                break;
+                            }
                             break;
                         default:  // Applicant
                             u = new Applicant(userID, name, age, maritalStatus, password);
+                            users.add(u);
                     }
 
                     System.out.println("Login succeeded.");

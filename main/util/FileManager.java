@@ -104,7 +104,58 @@ public class FileManager implements IFileManager {
         lines.add(0, header);
         Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
     }
-    
+    public List<HDBOfficer> loadOfficersFromFile(String path) {
+        List<HDBOfficer> list = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+            String line;
+            reader.readLine(); // skip header
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split("\t");
+                HDBOfficer o = new HDBOfficer(parts[1], parts[0], Integer.parseInt(parts[2]), parts[3], parts[4]);
+                o.setRegStatus(HDBOfficer.RegistrationStatus.valueOf(parts[5]));
+                o.setHandlingProjectId(parts[6].equals("null") ? null : parts[6]);
+                list.add(o);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }
+
+    public void saveOfficersToFile(String path, List<HDBOfficer> officers) {
+        try {
+            List<String> lines = new ArrayList<>();
+            lines.add("Name\tNRIC\tAge\tMarital Status\tPassword\tRegStatus\tHandlingProjectID");
+
+            // Create a map for fast lookup
+            Map<String, HDBOfficer> officerMap = officers.stream()
+                    .collect(Collectors.toMap(HDBOfficer::getNRIC, o -> o, (a, b) -> b));  // overwrite on duplicate NRIC
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+                reader.readLine(); // skip header
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\t");
+                    String nric = parts[1];
+                    if (officerMap.containsKey(nric)) {
+                        lines.add(officerMap.remove(nric).toCSVRow());
+                    } else {
+                        lines.add(line); // keep untouched lines
+                    }
+                }
+            }
+
+            // Append any remaining new officers
+            for (HDBOfficer o : officerMap.values()) {
+                lines.add(o.toCSVRow());
+            }
+
+            // Write updated lines
+            Files.write(Paths.get(path), lines, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
  
     public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
                             Date startDate, Date endDate, List<String> flatTypes,
