@@ -10,6 +10,8 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import main.models.HDBOfficer;
+
 public class FileManager implements IFileManager {
     @Override
     public List<List<String>> readFile(String fileName) {
@@ -278,5 +280,128 @@ public class FileManager implements IFileManager {
             e.printStackTrace();
             return false;
         }
+    }
+    @Override
+    public boolean updateProject(String projectName, 
+                               String newProjectName, 
+                               String neighborhood, 
+                               Date startDate, 
+                               Date endDate, 
+                               int twoRoomUnits, 
+                               int threeRoomUnits) throws IOException {
+        Path path = Paths.get("./data/ProjectList.txt");
+        if (!Files.exists(path)) {
+            System.out.println("Project file not found at: " + path.toAbsolutePath());
+            return false;
+        }
+        
+        List<String> lines = Files.readAllLines(path);
+        if (lines.isEmpty()) {
+            System.out.println("Project file is empty.");
+            return false;
+        }
+        
+        // Format dates
+        SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
+        String startDateStr = sdf.format(startDate);
+        String endDateStr = sdf.format(endDate);
+        
+        boolean projectFound = false;
+        for (int i = 1; i < lines.size(); i++) {
+            String[] cols = lines.get(i).split("\\t");
+            if (cols.length > 0 && cols[0].equalsIgnoreCase(projectName)) {
+                projectFound = true;
+                
+                // Create a new line with updated values
+                StringBuilder updatedLine = new StringBuilder();
+                updatedLine.append(newProjectName).append("\t");
+                updatedLine.append(neighborhood).append("\t");
+                
+                // Reuse flat types (columns 2-3)
+                updatedLine.append(cols[2]).append("\t");
+                
+                // Update 2-room units (column 3)
+                updatedLine.append(twoRoomUnits).append("\t");
+                
+                // Keep price (column 4)
+                updatedLine.append(cols[4]).append("\t");
+                
+                // Reuse flat type (column 5)
+                updatedLine.append(cols[5]).append("\t");
+                
+                // Update 3-room units (column 6)
+                updatedLine.append(threeRoomUnits).append("\t");
+                
+                // Keep price (column 7)
+                updatedLine.append(cols[7]).append("\t");
+                
+                // Update dates (columns 8-9)
+                updatedLine.append(startDateStr).append("\t");
+                updatedLine.append(endDateStr).append("\t");
+                
+                // Keep remaining columns (manager, max officers, assigned officers)
+                for (int j = 10; j < cols.length; j++) {
+                    updatedLine.append(cols[j]);
+                    if (j < cols.length - 1) {
+                        updatedLine.append("\t");
+                    }
+                }
+                
+                // Replace the line
+                lines.set(i, updatedLine.toString());
+                System.out.println("Found and updating project: " + projectName);
+                break;
+            }
+        }
+        
+        if (!projectFound) {
+            System.out.println("Project not found: " + projectName);
+            return false;
+        }
+        
+        // Write updated content back to file
+        Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
+        System.out.println("Project file updated successfully at: " + path.toAbsolutePath());
+        return true;
+    }
+    
+    @Override
+    public boolean deleteProjectFromFile(String projectName) throws IOException {
+        Path path = Paths.get("./data/ProjectList.txt");
+        if (!Files.exists(path)) {
+            System.out.println("Project file not found at: " + path.toAbsolutePath());
+            return false;
+        }
+        
+        List<String> lines = Files.readAllLines(path);
+        if (lines.isEmpty()) {
+            System.out.println("Project file is empty.");
+            return false;
+        }
+        
+        List<String> updatedLines = new ArrayList<>();
+        updatedLines.add(lines.get(0)); // Keep the header
+        
+        boolean projectFound = false;
+        for (int i = 1; i < lines.size(); i++) {
+            String[] cols = lines.get(i).split("\\t");
+            if (cols.length > 0 && cols[0].equalsIgnoreCase(projectName)) {
+                projectFound = true;
+                System.out.println("Found project to delete: " + projectName);
+                // Skip this line (don't add to updatedLines)
+            } else {
+                updatedLines.add(lines.get(i));
+            }
+        }
+        
+        if (!projectFound) {
+            System.out.println("Project not found in file: " + projectName);
+            return false;
+        }
+        
+        // Write updated content back to file
+        Files.write(path, updatedLines, StandardOpenOption.TRUNCATE_EXISTING);
+        System.out.println("Project deleted from file successfully at: " + path.toAbsolutePath());
+        return true;
     }
 }

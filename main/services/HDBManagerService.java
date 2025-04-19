@@ -32,22 +32,30 @@ public class HDBManagerService implements IHDBManagerService {
                                  int twoRoomUnits,
                                  int threeRoomUnits) {
     
-        // Only check overlapping projects that this manager is handling
-        for (BTOProject p : projectRepository.getAllProjects()) {
-            if (p.getManager().equals(manager)) {
-                if (!endDate.before(p.getStartDate()) && !startDate.after(p.getEndDate())) {
-                    // Overlapping project found for this manager
-                    return false;
-                }
+        // Get all projects for this manager
+        List<BTOProject> managerProjects = viewOwnProjects(manager);
+        
+        // Check if manager has any projects with visibility ON and application deadline not passed
+        Date currentDate = new Date(); // Get current date
+        boolean hasActiveVisibleProject = false;
+        
+        for (BTOProject p : managerProjects) {
+            System.out.println("Project: " + p.getProjectName() + ", Visible: " + p.isVisible() + 
+                            ", End date: " + p.getEndDate() + ", Current date: " + currentDate);
+            
+            if (p.isVisible() && !currentDate.after(p.getEndDate())) {
+                System.out.println("Project is visible and not expired");
+                hasActiveVisibleProject = true;
+                break;
             }
         }
+    
         
-        
-
+        // Create and save the project as before
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
         projectRepository.addProject(newProject);
         manager.addProject(newProject);
-
+    
         // Save project to file
         // Set default prices - these would normally come from parameters
         int twoRoomPrice = 350000;  // Default 2-room price
@@ -68,9 +76,7 @@ public class HDBManagerService implements IHDBManagerService {
             10 
         );
         
-        
         return true;
-        
     }
     
     @Override
@@ -99,24 +105,26 @@ public class HDBManagerService implements IHDBManagerService {
 
     @Override
     public void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
-        if (project.getManager().equals(manager)) {
+        if (project.getManagerNRIC().equals(manager.getNRIC())) {
             project.setVisibility(visibility);
         }
     }
 
     @Override
     public void editBTOProject(HDBManager manager,
-                               BTOProject project,
-                               String newName,
-                               String newNeighborhood,
-                               Date newStartDate,
-                               Date newEndDate,
-                               List<String> flatTypes,
-                               int newTwoRoomUnits,
-                               int newThreeRoomUnits) {
-        if (!project.getManager().equals(manager)) {
-            return;
-        }
+                              BTOProject project,
+                              String newName,
+                              String newNeighborhood,
+                              Date newStartDate,
+                              Date newEndDate,
+                              List<String> flatTypes,
+                              int newTwoRoomUnits,
+                              int newThreeRoomUnits) {
+        
+        // Store original project name before updating (in case it changes)
+        String originalName = project.getProjectName();
+        
+        // Update in-memory project
         project.setProjectName(newName);
         project.setNeighborhood(newNeighborhood);
         project.setStartDate(newStartDate);
@@ -124,13 +132,48 @@ public class HDBManagerService implements IHDBManagerService {
         project.setFlatTypes(new ArrayList<>(flatTypes));
         project.setTwoRoomUnitsAvailable(newTwoRoomUnits);
         project.setThreeRoomUnitsAvailable(newThreeRoomUnits);
+        
+        // Update the project file
+        try {
+            boolean success = fileManager.updateProject(
+                originalName,    // Original name to find the entry
+                newName,         // New project name
+                newNeighborhood, 
+                newStartDate, 
+                newEndDate, 
+                newTwoRoomUnits, 
+                newThreeRoomUnits
+            );
+            
+            if (!success) {
+                System.out.println("Failed to update project in file. Memory updated but file not changed.");
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to update project file: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
-
+    
     @Override
     public void deleteBTOProject(HDBManager manager, BTOProject project) {
-        if (project.getManager().equals(manager)) {
-            manager.removeProject(project);
-            projectRepository.removeProject(project);
+        
+        
+        // Store project name before removing it
+        String projectName = project.getProjectName();
+        
+        // Remove from memory
+        manager.removeProject(project);
+        projectRepository.removeProject(project);
+        
+        // Remove from file
+        try {
+            boolean success = fileManager.deleteProjectFromFile(projectName);
+            if (!success) {
+                System.out.println("Failed to delete project from file. Memory updated but file not changed.");
+            }
+        } catch (IOException e) {
+            System.out.println("Failed to delete project from file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 

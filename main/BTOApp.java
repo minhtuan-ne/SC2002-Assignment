@@ -392,7 +392,7 @@ public class BTOApp {
                         if (success) {
                             System.out.println("Project created successfully.");
                         } else {
-                            System.out.println("Failed to create project. Check for date overlaps.");
+                            System.out.println("Failed to create project. You still have a visible project, or the dates are wrong");
                         }
                     } catch (Exception e) {
                         System.out.println("Error: " + e.getMessage());
@@ -485,12 +485,17 @@ public class BTOApp {
                     if (!startDateStr.isEmpty()) {
                         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                         startDate = Date.from(LocalDate.parse(startDateStr, fmt)
-                                      .atStartOfDay(ZoneId.systemDefault()).toInstant());
-                                      
-                        System.out.print("New end date (dd/MM/yyyy): ");
-                        String endDateStr = sc.nextLine();
-                        endDate = Date.from(LocalDate.parse(endDateStr, fmt)
                                   .atStartOfDay(ZoneId.systemDefault()).toInstant());
+                                  
+                        System.out.print("New end date (dd/MM/yyyy, press Enter to keep current): ");
+                        String endDateStr = sc.nextLine();
+                        
+                        // Fix: Only parse the end date if it's not empty
+                        if (!endDateStr.isEmpty()) {
+                            endDate = Date.from(LocalDate.parse(endDateStr, fmt)
+                                    .atStartOfDay(ZoneId.systemDefault()).toInstant());
+                        }
+                        // If endDateStr is empty, we'll keep using the original endDate
                     }
                     
                     System.out.print("New 2-room units (press Enter to keep current): ");

@@ -46,6 +46,9 @@ public class BTOProject {
     public HDBManager getManager() {
         return manager;
     }
+    public String getManagerNRIC() {
+        return manager.getNRIC();
+    }
 
     public String getProjectName() {
         return projectName;
