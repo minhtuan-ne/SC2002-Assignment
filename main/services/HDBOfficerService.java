@@ -35,21 +35,25 @@ public class HDBOfficerService implements IHDBOfficerService {
 
     @Override
     public boolean registerToHandleProject(HDBOfficer officer, String projectId) {
-
-        // (a) can’t already be pending / approved
         if (officer.isRegistrationPending() || officer.isHandlingProject()) {
             System.out.println("You already have an active/ pending assignment.");
             return false;
         }
 
-        // (b) can’t have an application for that same project
         Application ownApp = applicantSvc.getApplication(officer.getNRIC());
         if (ownApp != null && ownApp.getProjectName().equalsIgnoreCase(projectId)) {
             System.out.println("You have applied for this project as an applicant – cannot handle it.");
             return false;
         }
 
+        BTOProject project = findProject(projectId);
+        if (project == null) {
+            System.out.println("Project not found.");
+            return false;
+        }
+
         officer.submitRegistration(projectId);
+        project.addPendingRegistration(officer);  // ✅ add to pending list
         System.out.println("Request submitted – awaiting manager approval.");
         return true;
     }

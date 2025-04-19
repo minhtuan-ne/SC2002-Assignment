@@ -177,4 +177,19 @@ public class BTOProject {
         setUnits(type, remain - 1);   // create setUnits(..) if missing
         return true;
     }
+    private List<HDBOfficer> pendingRegistrations = new ArrayList<>();
+
+    public List<HDBOfficer> getPendingRegistrations() {
+        return pendingRegistrations;
+    }
+
+    public void addPendingRegistration(HDBOfficer officer) {
+        if (!pendingRegistrations.contains(officer)) {
+            pendingRegistrations.add(officer);
+        }
+    }
+
+    public void removePendingRegistration(HDBOfficer officer) {
+        pendingRegistrations.remove(officer);
+    }
 }
