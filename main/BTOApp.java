@@ -33,9 +33,10 @@ public class BTOApp {
 
         // 3) Services
         IHDBManagerService  managerSvc   = new HDBManagerService(projectRepo, fileManager);
-        IHDBOfficerService  officerSvc   = new HDBOfficerService();
-        IApplicantService   applicantSvc = new ApplicantService(fileManager);
-        IEnquiryService     enquirySvc   = new EnquiryService();
+        IEnquiryService enquirySvc    = new EnquiryService();
+        IApplicantService applicantSvc = new ApplicantService(fileManager);
+        IHDBOfficerService officerSvc =
+                new HDBOfficerService((ProjectRepository) projectRepo, (EnquiryService) enquirySvc, (ApplicantService) applicantSvc);
 
         // 4) Main login/logout loop
         Scanner sc = new Scanner(System.in);
@@ -59,7 +60,12 @@ public class BTOApp {
                             runManagerLoop((HDBManager) user, managerSvc, projectRepo, sc, enquirySvc);
                             break;
                         case "hdbofficer":
-                            runOfficerLoop((HDBOfficer) user, officerSvc, projectRepo.getAllProjects(), sc);
+                            runOfficerLoop((HDBOfficer) user,
+                                    officerSvc,
+                                    applicantSvc,
+                                    enquirySvc,
+                                    projectRepo.getAllProjects(),
+                                    sc);
                             break;
                         default:
                             System.out.println("Unknown role: " + user.getRole());
@@ -966,7 +972,7 @@ public class BTOApp {
                     String aNric = sc.nextLine();
                     System.out.print("Flat type (2-room / 3-room): ");
                     String ftype = sc.nextLine();
-                    svc.bookFlat(me, aNric, ftype);   // method takes officer to enforce project match
+                    svc.bookFlat(aNric, ftype);
                     break;
                 }
 
@@ -991,8 +997,6 @@ public class BTOApp {
                     System.out.println("Invalid choice.");
             }
         }
-    }
-
 
     // ------------------------------------------------------------------------
     // Helper to find a project by name
