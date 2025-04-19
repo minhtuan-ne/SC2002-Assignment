@@ -3,7 +3,6 @@ package main.services;
 import main.models.HDBManager;
 import main.models.BTOProject;
 import main.models.HDBOfficer;
-import main.models.Applicant;
 import main.models.Application;
 
 import java.util.Date;

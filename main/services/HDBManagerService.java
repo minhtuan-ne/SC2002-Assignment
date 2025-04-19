@@ -47,7 +47,30 @@ public class HDBManagerService implements IHDBManagerService {
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
         projectRepository.addProject(newProject);
         manager.addProject(newProject);
+
+        // Save project to file
+        // Set default prices - these would normally come from parameters
+        int twoRoomPrice = 350000;  // Default 2-room price
+        int threeRoomPrice = 450000; // Default 3-room price
+        
+        fileManager.saveProject(
+            manager.getNRIC(),
+            manager.getName(),
+            name,
+            neighborhood, 
+            startDate, 
+            endDate, 
+            flatTypes, 
+            twoRoomUnits, 
+            threeRoomUnits,
+            twoRoomPrice,
+            threeRoomPrice,
+            10 
+        );
+        
+        
         return true;
+        
     }
     
     @Override
@@ -226,6 +249,13 @@ public class HDBManagerService implements IHDBManagerService {
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC) {
         if (project.getManager().equals(manager)) {
             project.addAssignedOfficer(officerNRIC);
+            
+            // Need to get officer name to match the format in the file
+            String officerName = getOfficerNameByNRIC(officerNRIC);
+            
+            // Update the project file with the new officer assignment
+            fileManager.updateProjectOfficer(project.getProjectName(), officerNRIC, officerName, true);
+            
             return true;
         }
         return false;
@@ -235,10 +265,31 @@ public class HDBManagerService implements IHDBManagerService {
     public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, String officerNRIC) {
         if (project.getManager().equals(manager)) {
             project.removeAssignedOfficer(officerNRIC);
+            
+            // Need to get officer name to match the format in the file
+            String officerName = getOfficerNameByNRIC(officerNRIC);
+            
+            // Update the project file to remove the officer
+            fileManager.updateProjectOfficer(project.getProjectName(), officerNRIC, officerName, false);
+            
             return true;
         }
         return false;
     }
+    
+    // Helper method to get officer name by NRIC
+    private String getOfficerNameByNRIC(String nric) {
+        
+        List<List<String>> officers = fileManager.readFile("OfficerList.txt");
+        for (List<String> officer : officers) {
+            if (officer.size() > 1 && officer.get(1).equals(nric)) {
+                return officer.get(0); // Return officer name
+            }
+        }
+        
+        return "Unknown"; // Fallback if officer not found
+    }
+
     @Override
     public boolean changePassword(HDBManager manager, String oldPassword, String newPassword) {
         try {

@@ -936,7 +936,7 @@ public class BTOApp {
 
                 /* 1 ─ Register request */
                 case "1": {
-                    System.out.print("Project ID: ");
+                    System.out.print("Project name: ");
                     String pid = sc.nextLine();
                     svc.registerToHandleProject(me, pid);
                     break;
