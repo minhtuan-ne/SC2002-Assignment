@@ -15,6 +15,8 @@ public class HDBManagerService implements IHDBManagerService {
     private final IFileManager fileManager;
     private final IProjectRepository projectRepository;
 
+    private List<String> assignedOfficer;
+
     public HDBManagerService(IProjectRepository projectRepository, IFileManager fileManager) {
         this.projectRepository = projectRepository;
         this.fileManager = fileManager;
@@ -39,8 +41,10 @@ public class HDBManagerService implements IHDBManagerService {
                 }
             }
         }
-    
-        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10);
+        
+        
+
+        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
         projectRepository.addProject(newProject);
         manager.addProject(newProject);
         return true;
@@ -197,7 +201,30 @@ public class HDBManagerService implements IHDBManagerService {
             }
         }
     }
+    public List<String> getAssignedOfficer() {
+        if (assignedOfficer == null) {
+            assignedOfficer = new ArrayList<>();
+        }
+        return assignedOfficer;
+    }
+  
+    @Override
+    public boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC) {
+        if (project.getManager().equals(manager)) {
+            project.addAssignedOfficer(officerNRIC);
+            return true;
+        }
+        return false;
+    }
 
+    @Override
+    public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, String officerNRIC) {
+        if (project.getManager().equals(manager)) {
+            project.removeAssignedOfficer(officerNRIC);
+            return true;
+        }
+        return false;
+    }
     @Override
     public boolean changePassword(HDBManager manager, String oldPassword, String newPassword) {
         try {

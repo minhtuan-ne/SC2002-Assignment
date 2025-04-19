@@ -21,8 +21,9 @@ public class BTOProject {
     private int maxOfficers;                  // Max number of HDB officers that can handle this project
     private List<HDBOfficer> HDBOfficers;// The officers assigned to handle
     private List<Application> applications;
+    private List<String> assignedOfficer;
 
-    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers) {
+    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers, List<String> assignedOfficer) {
         this.manager = manager;
         this.projectName = projectName;
         this.neighborhood = neighborhood;
@@ -35,6 +36,11 @@ public class BTOProject {
         this.visibility = true; 
         this.HDBOfficers = new ArrayList<>();
         this.applications = new ArrayList<>();
+        this.assignedOfficer = assignedOfficer;
+    }
+    
+    public List<String> getAssignedOfficer() {
+        return assignedOfficer;
     }
     
     public HDBManager getManager() {
@@ -128,6 +134,19 @@ public class BTOProject {
     }
 
 
+    public void setAssignedOfficer(List<String> assignedOfficer) {
+        this.assignedOfficer = assignedOfficer;
+    }
+    
+    public void addAssignedOfficer(String officerNRIC) {
+        if (!this.assignedOfficer.contains(officerNRIC)) {
+            this.assignedOfficer.add(officerNRIC);
+        }
+    }
+    
+    public void removeAssignedOfficer(String officerNRIC) {
+        this.assignedOfficer.remove(officerNRIC);
+    }
 
     // get available units for each flat type
     public int getUnits(String flatType) {

@@ -46,4 +46,7 @@ public interface IHDBManagerService {
 
     boolean changePassword(HDBManager manager, String oldPassword, String newPassword);
 
+    boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC);
+    boolean removeOfficerFromProject(HDBManager manager, BTOProject project, String officerNRIC);
+
 }

@@ -132,9 +132,16 @@ public class BTOApp {
             String mgrPwd  = rec.get(4);
 
             HDBManager manager = new HDBManager(mgrNric, mgrName, mgrAge, mgrMS, mgrPwd);
+
+            String[] officerNames = cols[12].split(",");
+            List<String> officerList = Arrays.stream(officerNames)
+                                            .map(String::trim)
+                                            .filter(s -> !s.isEmpty())
+                                            .toList();
+
             BTOProject project = new BTOProject(
                 manager, projName, neighborhood, sd, ed,
-                List.of(t1, t2), u1, u2, maxOfficers
+                List.of(t1, t2), u1, u2, maxOfficers, officerList
             );
 
             projectRepo.addProject(project);
