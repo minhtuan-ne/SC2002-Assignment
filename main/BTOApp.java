@@ -941,7 +941,18 @@ public class BTOApp {
                 /* 1 ─ Register request */
                 case "1": {
                     System.out.print("Project name: ");
-                    String pid = sc.nextLine();
+                    String pid = sc.nextLine().trim();
+
+                    // Prompt: Do you intend to apply?
+                    System.out.print("Do you intend to apply for this project as an applicant? (yes/no): ");
+                    String answer = sc.nextLine().trim().toLowerCase();
+
+                    if (answer.equals("yes")) {
+                        System.out.println("Registration cancelled – you cannot apply and handle the same project.");
+                        break;
+                    }
+
+                    // Continue registration only if user said "no"
                     svc.registerToHandleProject(me, pid);
                     break;
                 }
