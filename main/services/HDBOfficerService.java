@@ -37,39 +37,36 @@ public class HDBOfficerService implements IHDBOfficerService {
 
     @Override
     public boolean registerToHandleProject(HDBOfficer officer, String projectId) {
-
-        // (2) Find the target project
+        // Find the target project
         BTOProject project = findProject(projectId);
         if (project == null) {
             System.out.println("Project not found.");
             return false;
         }
 
-        // (4) Check if officer has already applied for this project
-        Application ownApp = applicantSvc.getApplication(officer.getNRIC());
-        if (ownApp != null && ownApp.getProjectName().equalsIgnoreCase(projectId)) {
+        // If officer is handling a project, check if it's expired
+        if (officer.isHandlingProject()) {
+            BTOProject current = findProject(officer.getHandlingProjectId());
+
+            if (current != null && new Date().after(current.getEndDate())) {
+                // Auto-clear expired project
+                officer.cancelRegistration();
+                current.removeAssignedOfficer(officer.getNRIC());
+                System.out.println("Previous project has ended. Status reset – you may now register.");
+            } else {
+                System.out.println("You are still handling an ongoing project. Cannot register.");
+                return false;
+            }
+        }
+
+        // Check if officer has applied for this project
+        Application app = applicantSvc.getApplication(officer.getNRIC());
+        if (app != null && app.getProjectName().equalsIgnoreCase(projectId)) {
             System.out.println("You have already applied for this project as an applicant – cannot register as officer.");
             return false;
         }
 
-        // (5) Check if officer is already handling another project with overlapping period
-        Date newOpen = project.getStartDate();
-        List<BTOProject> allProjects = projectRepo.getAllProjects();
-
-        for (BTOProject p : allProjects) {
-            if (p.getProjectName().equalsIgnoreCase(projectId)) continue;
-
-            boolean isOfficerAssigned = p.getHDBOfficers().contains(officer);
-            if (isOfficerAssigned) {
-                Date currentClose = p.getEndDate();
-                if (newOpen.compareTo(currentClose) <= 0) {
-                    System.out.println("Cannot register – you're already handling another project during this period.");
-                    return false;
-                }
-            }
-        }
-
-        // (6) All checks passed – proceed to register
+        // All checks passed – submit request
         officer.submitRegistration(projectId);
         project.addPendingRegistration(officer);
         System.out.println("Request submitted – awaiting manager approval.");
