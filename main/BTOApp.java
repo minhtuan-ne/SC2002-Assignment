@@ -336,6 +336,7 @@ public class BTOApp {
                     break;
                 }
                 case "0":
+                    System.out.println("Logging out...");
                     return;
                 default:
                     System.out.println("Invalid choice.");
@@ -347,10 +348,10 @@ public class BTOApp {
     // Manager menu loop
     // ------------------------------------------------------------------------
     private static void runManagerLoop(HDBManager me,
-                                IHDBManagerService svc,
-                                IProjectRepository repo,
-                                Scanner sc,
-                                IEnquiryService iesvc) {
+            IHDBManagerService svc,
+            IProjectRepository repo,
+            Scanner sc,
+            IEnquiryService iesvc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");
             System.out.println("1) Create project");
@@ -377,19 +378,19 @@ public class BTOApp {
                     String name = sc.nextLine();
                     System.out.print("Neighborhood: ");
                     String neighborhood = sc.nextLine();
-                    
+
                     System.out.print("Start date (dd/MM/yyyy): ");
                     String startDateStr = sc.nextLine();
                     System.out.print("End date (dd/MM/yyyy): ");
                     String endDateStr = sc.nextLine();
-                    
+
                     try {
                         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                         Date startDate = Date.from(LocalDate.parse(startDateStr, fmt)
-                                        .atStartOfDay(ZoneId.systemDefault()).toInstant());
+                                .atStartOfDay(ZoneId.systemDefault()).toInstant());
                         Date endDate = Date.from(LocalDate.parse(endDateStr, fmt)
-                                     .atStartOfDay(ZoneId.systemDefault()).toInstant());
-                        
+                                .atStartOfDay(ZoneId.systemDefault()).toInstant());
+
                         System.out.print("Number of 2-room units: ");
                         int twoRoomUnits = Integer.parseInt(sc.nextLine());
                         System.out.print("Number of 3-room units: ");
@@ -398,22 +399,23 @@ public class BTOApp {
                         int twoRoomPrice = Integer.parseInt(sc.nextLine());
                         System.out.print("Price of 3-room units: ");
                         int threeRoomPrice = Integer.parseInt(sc.nextLine());
-                        
+
                         List<String> flatTypes = List.of("2-room", "3-room");
-                        boolean success = svc.createProject(me, name, neighborhood, startDate, 
-                                             endDate, flatTypes, twoRoomUnits, threeRoomUnits, twoRoomPrice, threeRoomPrice);
-                        
+                        boolean success = svc.createProject(me, name, neighborhood, startDate,
+                                endDate, flatTypes, twoRoomUnits, threeRoomUnits, twoRoomPrice, threeRoomPrice);
+
                         if (success) {
                             System.out.println("Project created successfully.");
                         } else {
-                            System.out.println("Failed to create project. You still have a visible project, or the dates are wrong.");
+                            System.out.println(
+                                    "Failed to create project. You still have a visible project, or the dates are wrong.");
                         }
                     } catch (Exception e) {
                         System.out.println("Error: " + e.getMessage());
                     }
                     break;
                 }
-                
+
                 case "2": { // View all projects
                     List<BTOProject> allProjects = svc.viewAllProjects();
                     System.out.println("\n====== All Projects ======");
@@ -421,42 +423,89 @@ public class BTOApp {
                         System.out.println("No projects found.");
                     } else {
                         for (BTOProject p : allProjects) {
-                            System.out.printf("%s - %s (Manager: %s)%n", 
-                                p.getProjectName(), p.getNeighborhood(), p.getManager().getName());
+                            System.out.printf("%s - %s (Manager: %s)%n",
+                                    p.getProjectName(), p.getNeighborhood(), p.getManager().getName());
                             String start = p.getStartDate().toInstant()
-                                           .atZone(ZoneId.systemDefault())
-                                           .toLocalDate().format(DISPLAY_FMT);
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate().format(DISPLAY_FMT);
                             String end = p.getEndDate().toInstant()
-                                         .atZone(ZoneId.systemDefault())
-                                         .toLocalDate().format(DISPLAY_FMT);
-                            System.out.printf("  Period: %s to %s, Visible: %s%n", 
-                                start, end, p.isVisible() ? "Yes" : "No");
-                            System.out.printf("  Units - 2-room: %d, 3-room: %d%n", 
-                                p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate().format(DISPLAY_FMT);
+                            System.out.printf("  Period: %s to %s, Visible: %s%n",
+                                    start, end, p.isVisible() ? "Yes" : "No");
+                            System.out.printf("  Units - 2-room: %d, 3-room: %d%n",
+                                    p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
                         }
                     }
                     break;
                 }
-                
-                case "3": { // View my projects
+
+                case "3": { // View my projects (filterable)
+                    System.out.println("Filter by?\n 1)Flat Type\n 2)Visibility\n 0)Exit\n");
+                    int filterBy = Integer.parseInt(sc.nextLine().trim());
+                    if (filterBy == 0) break;
+                    
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
-                    System.out.println("\n====== My Projects ======");
-                    if (myProjects.isEmpty()) {
-                        System.out.println("You have no projects.");
+                    List<BTOProject> filteredProjects = new ArrayList<>(myProjects);
+                    
+                    // Apply filters
+                    if (filterBy == 1) {
+                        System.out.println("Filter by flat type:\n 1)2-room\n 2)3-room\n 3)Both with availability\n");
+                        int flatTypeChoice = Integer.parseInt(sc.nextLine().trim());
+                        
+                        if (flatTypeChoice == 1) {
+                            filteredProjects = myProjects.stream()
+                                .filter(p -> p.getTwoRoomUnitsAvailable() > 0)
+                                .collect(Collectors.toList());
+                        } else if (flatTypeChoice == 2) {
+                            filteredProjects = myProjects.stream()
+                                .filter(p -> p.getThreeRoomUnitsAvailable() > 0)
+                                .collect(Collectors.toList());
+                        } else if (flatTypeChoice == 3) {
+                            filteredProjects = myProjects.stream()
+                                .filter(p -> p.getTwoRoomUnitsAvailable() > 0 || p.getThreeRoomUnitsAvailable() > 0)
+                                .collect(Collectors.toList());
+                        } else {
+                            System.out.println("Invalid choice. Showing all projects.");
+                        }
+                    } else if (filterBy == 2) {
+                        System.out.println("Filter by visibility:\n 1)Visible\n 2)Hidden\n");
+                        int visibilityChoice = Integer.parseInt(sc.nextLine().trim());
+                        
+                        if (visibilityChoice == 1) {
+                            filteredProjects = myProjects.stream()
+                                .filter(BTOProject::isVisible)
+                                .collect(Collectors.toList());
+                        } else if (visibilityChoice == 2) {
+                            filteredProjects = myProjects.stream()
+                                .filter(p -> !p.isVisible())
+                                .collect(Collectors.toList());
+                        } else {
+                            System.out.println("Invalid choice. Showing all projects.");
+                        }
                     } else {
-                        for (int i = 0; i < myProjects.size(); i++) {
-                            BTOProject p = myProjects.get(i);
+                        System.out.println("Incorrect input.");
+                        break;
+                    }
+                    
+                    // Display filtered projects
+                    System.out.println("\n====== My Projects ======");
+                    if (filteredProjects.isEmpty()) {
+                        System.out.println("No projects match your filter criteria.");
+                    } else {
+                        for (int i = 0; i < filteredProjects.size(); i++) {
+                            BTOProject p = filteredProjects.get(i);
                             System.out.printf("%d. %s - %s%n", i + 1, p.getProjectName(), p.getNeighborhood());
                             String start = p.getStartDate().toInstant()
-                                           .atZone(ZoneId.systemDefault())
-                                           .toLocalDate().format(DISPLAY_FMT);
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate().format(DISPLAY_FMT);
                             String end = p.getEndDate().toInstant()
-                                         .atZone(ZoneId.systemDefault())
-                                         .toLocalDate().format(DISPLAY_FMT);
-                            System.out.printf("   Period: %s to %s, Visible: %s%n", 
-                                start, end, p.isVisible() ? "Yes" : "No");
-                            System.out.printf("   Units - 2-room: %d, 3-room: %d%n", 
-                                p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
+                                    .atZone(ZoneId.systemDefault())
+                                    .toLocalDate().format(DISPLAY_FMT);
+                            System.out.printf("   Period: %s to %s, Visible: %s%n",
+                                    start, end, p.isVisible() ? "Yes" : "No");
+                            System.out.printf("   Units - 2-room: %d, 3-room: %d%n",
+                                    p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
                         }
                     }
                     break;
@@ -468,42 +517,44 @@ public class BTOApp {
                         System.out.println("You have no projects to edit.");
                         break;
                     }
-                    
+
                     System.out.println("Select a project to edit:");
                     for (int i = 0; i < myProjects.size(); i++) {
                         System.out.printf("%d) %s%n", i + 1, myProjects.get(i).getProjectName());
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
-                    
+
                     System.out.print("New project name (press Enter to keep current): ");
                     String name = sc.nextLine();
-                    if (name.isEmpty()) name = selected.getProjectName();
-                    
+                    if (name.isEmpty())
+                        name = selected.getProjectName();
+
                     System.out.print("New neighborhood (press Enter to keep current): ");
                     String neighborhood = sc.nextLine();
-                    if (neighborhood.isEmpty()) neighborhood = selected.getNeighborhood();
-                    
+                    if (neighborhood.isEmpty())
+                        neighborhood = selected.getNeighborhood();
+
                     System.out.print("New start date (dd/MM/yyyy, press Enter to keep current): ");
                     String startDateStr = sc.nextLine();
                     Date startDate = selected.getStartDate();
                     Date endDate = selected.getEndDate();
-                    
+
                     if (!startDateStr.isEmpty()) {
                         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                         startDate = Date.from(LocalDate.parse(startDateStr, fmt)
-                                  .atStartOfDay(ZoneId.systemDefault()).toInstant());
-                                  
+                                .atStartOfDay(ZoneId.systemDefault()).toInstant());
+
                         System.out.print("New end date (dd/MM/yyyy, press Enter to keep current): ");
                         String endDateStr = sc.nextLine();
-                        
+
                         // Fix: Only parse the end date if it's not empty
                         if (!endDateStr.isEmpty()) {
                             endDate = Date.from(LocalDate.parse(endDateStr, fmt)
@@ -511,42 +562,44 @@ public class BTOApp {
                         }
                         // If endDateStr is empty, we'll keep using the original endDate
                     }
-                    
+
                     System.out.print("New 2-room units (press Enter to keep current): ");
                     String twoRoomStr = sc.nextLine();
                     int twoRoomUnits = selected.getTwoRoomUnitsAvailable();
-                    if (!twoRoomStr.isEmpty()) twoRoomUnits = Integer.parseInt(twoRoomStr);
-                    
+                    if (!twoRoomStr.isEmpty())
+                        twoRoomUnits = Integer.parseInt(twoRoomStr);
+
                     System.out.print("New 3-room units (press Enter to keep current): ");
                     String threeRoomStr = sc.nextLine();
                     int threeRoomUnits = selected.getThreeRoomUnitsAvailable();
-                    if (!threeRoomStr.isEmpty()) threeRoomUnits = Integer.parseInt(threeRoomStr);
-                    
-                    svc.editBTOProject(me, selected, name, neighborhood, startDate, endDate, 
-                                      List.of("2-room", "3-room"), twoRoomUnits, threeRoomUnits);
+                    if (!threeRoomStr.isEmpty())
+                        threeRoomUnits = Integer.parseInt(threeRoomStr);
+
+                    svc.editBTOProject(me, selected, name, neighborhood, startDate, endDate,
+                            List.of("2-room", "3-room"), twoRoomUnits, threeRoomUnits);
                     System.out.println("Project updated successfully.");
                     break;
                 }
-                
+
                 case "5": { // Delete project
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to delete.");
                         break;
                     }
-                    
+
                     System.out.println("Select a project to delete:");
                     for (int i = 0; i < myProjects.size(); i++) {
                         System.out.printf("%d) %s%n", i + 1, myProjects.get(i).getProjectName());
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
                     System.out.print("Are you sure you want to delete this project? (y/n): ");
                     String confirm = sc.nextLine().toLowerCase();
@@ -558,28 +611,28 @@ public class BTOApp {
                     }
                     break;
                 }
-                
+
                 case "6": { // Toggle project visibility
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to toggle visibility.");
                         break;
                     }
-                    
+
                     System.out.println("Select a project to toggle visibility:");
                     for (int i = 0; i < myProjects.size(); i++) {
-                        System.out.printf("%d) %s (currently %s)%n", i + 1, 
-                                myProjects.get(i).getProjectName(), 
+                        System.out.printf("%d) %s (currently %s)%n", i + 1,
+                                myProjects.get(i).getProjectName(),
                                 myProjects.get(i).isVisible() ? "visible" : "hidden");
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
                     boolean newVisibility = !selected.isVisible();
                     svc.toggleVisibility(me, selected, newVisibility);
@@ -603,7 +656,7 @@ public class BTOApp {
                             System.out.println("  (none)");
                         } else {
                             for (String o : assigned) {
-                                
+
                                 System.out.printf("  - %s\n", o);
                             }
                         }
@@ -674,28 +727,28 @@ public class BTOApp {
                     }
                     break;
                 }
-                
+
                 case "9": { // Process BTO application
                     List<BTOProject> myProjects = svc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to process applications for.");
                         break;
                     }
-                    
+
                     System.out.println("\nSelect a project:");
                     for (int i = 0; i < myProjects.size(); i++) {
                         System.out.printf("%d) %s%n", i + 1, myProjects.get(i).getProjectName());
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
-                    
+
                     // Show existing applications for this project
                     List<Application> existingApps = selected.getApplications();
                     System.out.println("\n===== Pending Applications =====");
@@ -707,45 +760,45 @@ public class BTOApp {
                             if (app.getStatus().equalsIgnoreCase("Pending")) {
                                 appCount++;
                                 System.out.printf("%d) NRIC: %s, Name: %s, Flat Type: %s%n",
-                                    appCount, 
-                                    app.getApplicant().getNRIC(),
-                                    app.getApplicant().getName(),
-                                    app.getFlatType());
+                                        appCount,
+                                        app.getApplicant().getNRIC(),
+                                        app.getApplicant().getName(),
+                                        app.getFlatType());
                             }
                         }
-                        
+
                         if (appCount == 0) {
                             System.out.println("No pending applications to process.");
                             break;
                         }
-                        
+
                         System.out.print("\nEnter applicant NRIC to process: ");
                         String nric = sc.nextLine();
-                        
+
                         // Find the application
                         Application applicationToProcess = null;
                         for (Application app : existingApps) {
-                            if (app.getApplicant().getNRIC().equalsIgnoreCase(nric) && 
-                                app.getStatus().equalsIgnoreCase("Pending")) {
+                            if (app.getApplicant().getNRIC().equalsIgnoreCase(nric) &&
+                                    app.getStatus().equalsIgnoreCase("Pending")) {
                                 applicationToProcess = app;
                                 break;
                             }
                         }
-                    
+
                         if (applicationToProcess == null) {
                             System.out.println("Application not found with that NRIC or not in Pending status.");
                             break;
                         }
-                        
+
                         System.out.println("\nDo you want to approve or reject this application?");
                         System.out.println("1) Approve");
                         System.out.println("2) Reject");
                         System.out.print("> ");
                         int choice9 = Integer.parseInt(sc.nextLine());
-                        
+
                         boolean approve = (choice9 == 1);
                         boolean success = svc.handleBTOApplication(me, applicationToProcess, approve);
-                        
+
                         if (success) {
                             if (approve) {
                                 System.out.println("Application approved successfully.");
@@ -770,92 +823,111 @@ public class BTOApp {
                         System.out.println("You have no projects to process withdrawal requests for.");
                         break;
                     }
-                    
+
                     System.out.println("\nSelect a project:");
                     for (int i = 0; i < myProjects.size(); i++) {
                         System.out.printf("%d) %s%n", i + 1, myProjects.get(i).getProjectName());
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
-                    
+
                     // Get applications from the project
                     List<Application> applications = selected.getApplications();
-                    
+
                     // Display existing applications
                     System.out.println("\n===== Current Applications =====");
                     if (applications.isEmpty()) {
                         System.out.println("No applications found for this project.");
                         break;
                     }
-                    
+
                     int count = 0;
                     for (Application app : applications) {
                         if ("Successful".equals(app.getStatus()) || "Pending".equals(app.getStatus())) {
                             count++;
                             System.out.printf("%d) NRIC: %s, Name: %s, Status: %s, Flat Type: %s%n", count,
-                                app.getApplicant().getNRIC(),
-                                app.getApplicant().getName(),
-                                app.getStatus(),
-                                app.getFlatType());
+                                    app.getApplicant().getNRIC(),
+                                    app.getApplicant().getName(),
+                                    app.getStatus(),
+                                    app.getFlatType());
                         }
                     }
-                    
+
                     if (count == 0) {
                         System.out.println("No applications eligible for withdrawal.");
                         break;
                     }
-                    
+
                     System.out.print("\nEnter applicant NRIC to process withdrawal: ");
                     String nric = sc.nextLine();
-                    
+
                     // Find the application
                     Application foundApp = null;
                     for (Application app : applications) {
-                        if (app.getApplicant().getNRIC().equalsIgnoreCase(nric) && 
-                            ("Successful".equals(app.getStatus()) || "Pending".equals(app.getStatus()))) {
+                        if (app.getApplicant().getNRIC().equalsIgnoreCase(nric) &&
+                                ("Successful".equals(app.getStatus()) || "Pending".equals(app.getStatus()))) {
                             foundApp = app;
                             break;
                         }
                     }
-                    
+
                     if (foundApp == null) {
                         System.out.println("No eligible application found for this NRIC.");
                         break;
                     }
-                    
+
                     // Process the withdrawal
                     svc.handleWithdrawal(me, foundApp);
                     System.out.println("Withdrawal processed successfully.");
                     break;
                 }
-                
-                case "11": { // Generate booking report
-                    System.out.print("Filter by flat type (2-room/3-room): ");
-                    String filter = sc.nextLine().trim();
+
+                case "11": { // Generate booking report (Manager function)
+                    System.out.println("Generate booking report");
+                    System.out.println("Filter by flat type:");
+                    System.out.println(" 1) 2-room");
+                    System.out.println(" 2) 3-room");
+                    System.out.println(" 3) All flat types");
+                    System.out.print("Choose option (1-3): ");
                     
-                    if (!filter.equalsIgnoreCase("2-room") && !filter.equalsIgnoreCase("3-room")) {
-                        System.out.println("Invalid flat type. Please use '2-room' or '3-room'.");
-                        break;
+                    String choice11 = sc.nextLine().trim();
+                    String filterType = null;
+                    
+                    switch (choice11) {
+                        case "1":
+                            filterType = "2-room";
+                            break;
+                        case "2":
+                            filterType = "3-room";
+                            break;
+                        case "3":
+                            filterType = null; // No filter, show all
+                            break;
+                        default:
+                            System.out.println("Invalid option selected.");
+                            break;
                     }
                     
-                    System.out.println("\n===== Booking Report - " + filter + " =====");
-                    svc.bookingReport(me, filter);
+                    if (choice11.equals("1") || choice11.equals("2") || choice11.equals("3")) {
+                        System.out.println("\n===== Booking Report" + (filterType != null ? " - " + filterType : " - All Types") + " =====");
+                        svc.bookingReport(me, filterType);
+                    }
                     break;
                 }
-                
+
                 case "12": { // View all enquiries
                     System.out.println("\n===== All Enquiries =====");
-                    
+
                     // Use the same enquiryService that was declared in main()
                     List<Enquiry> allEnquiries = iesvc.getAllEnquiries();
-                    
+
                     if (allEnquiries.isEmpty()) {
                         System.out.println("No enquiries found.");
                     } else {
@@ -867,18 +939,18 @@ public class BTOApp {
                     }
                     break;
                 }
-                
+
                 // Case 13: Reply to enquiry - Modified to show enquiries first
                 case "13": { // Reply to enquiry
                     System.out.println("\n===== All Enquiries =====");
-                    
+
                     List<Enquiry> allEnquiries = iesvc.getAllEnquiries();
-                    
+
                     if (allEnquiries.isEmpty()) {
                         System.out.println("No enquiries to reply to.");
                         break;
                     }
-                    
+
                     // Display all enquiries with ID numbers
                     for (int i = 0; i < allEnquiries.size(); i++) {
                         Enquiry e = allEnquiries.get(i);
@@ -886,20 +958,20 @@ public class BTOApp {
                         System.out.printf("   From: %s%n", e.getUserNric());
                         System.out.printf("   Message: %s%n%n", e.getMessage());
                     }
-                    
+
                     System.out.print("Select enquiry to reply to (enter number): ");
                     int choice13 = Integer.parseInt(sc.nextLine());
-                    
+
                     if (choice13 < 1 || choice13 > allEnquiries.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     Enquiry selected = allEnquiries.get(choice13 - 1);
-                    
+
                     System.out.print("Reply message: ");
                     String reply = sc.nextLine();
-                    
+
                     iesvc.replyToEnquiry(selected.getEnquiryId(), reply);
                     break;
                 }
@@ -913,6 +985,7 @@ public class BTOApp {
                 }
 
                 case "0":
+                    System.out.println("Logging out...");
                     return;
 
                 default:
