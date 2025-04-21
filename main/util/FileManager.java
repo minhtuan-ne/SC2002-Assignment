@@ -159,6 +159,32 @@ public class FileManager implements IFileManager {
             e.printStackTrace();
         }
     }
+
+    public void updateOfficerInFile(HDBOfficer updatedOfficer, String path) {
+        try {
+            List<String> lines = new ArrayList<>();
+            lines.add("Name\tNRIC\tAge\tMarital Status\tPassword\tRegStatus\tHandlingProjectID");
+
+            try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
+                reader.readLine(); // skip header
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] parts = line.split("\t");
+                    String nric = parts[1];
+
+                    if (nric.equalsIgnoreCase(updatedOfficer.getNRIC())) {
+                        lines.add(updatedOfficer.toCSVRow());
+                    } else {
+                        lines.add(line);
+                    }
+                }
+            }
+
+            Files.write(Paths.get(path), lines, StandardOpenOption.TRUNCATE_EXISTING);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
  
     public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
                             Date startDate, Date endDate, List<String> flatTypes,
