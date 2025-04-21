@@ -30,7 +30,9 @@ public class HDBManagerService implements IHDBManagerService {
                                  Date endDate,
                                  List<String> flatTypes,
                                  int twoRoomUnits,
-                                 int threeRoomUnits) {
+                                 int threeRoomUnits, 
+                                 int twoRoomPrice,
+                                 int threeRoomPrice) {
     
         // Get all projects for this manager
         List<BTOProject> managerProjects = viewOwnProjects(manager);
@@ -52,14 +54,11 @@ public class HDBManagerService implements IHDBManagerService {
     
         
         // Create and save the project as before
-        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
+        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, twoRoomPrice, threeRoomPrice, new ArrayList<>());       
         projectRepository.addProject(newProject);
         manager.addProject(newProject);
     
         // Save project to file
-        // Set default prices - these would normally come from parameters
-        int twoRoomPrice = 350000;  // Default 2-room price
-        int threeRoomPrice = 450000; // Default 3-room price
         
         fileManager.saveProject(
             manager.getNRIC(),

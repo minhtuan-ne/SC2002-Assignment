@@ -15,13 +15,12 @@ import java.util.stream.Collectors;
 
 public class BTOApp {
 
-    private static final DateTimeFormatter DISPLAY_FMT =
-        DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     public static void main(String[] args) {
         // 1) Core infra
-        IFileManager fileManager       = new FileManager();
-        Authenticator auth             = new Authenticator(fileManager);
+        IFileManager fileManager = new FileManager();
+        Authenticator auth = new Authenticator(fileManager);
         IProjectRepository projectRepo = new ProjectRepository();
 
         // 2) Preload projects from data/ProjectList.txt
@@ -32,16 +31,15 @@ public class BTOApp {
         }
 
         // 3) Services
-        IHDBManagerService  managerSvc   = new HDBManagerService(projectRepo, fileManager);
-        IEnquiryService enquirySvc    = new EnquiryService();
+        IHDBManagerService managerSvc = new HDBManagerService(projectRepo, fileManager);
+        IEnquiryService enquirySvc = new EnquiryService();
         IApplicantService applicantSvc = new ApplicantService(fileManager, enquirySvc);
-        IHDBOfficerService officerSvc =
-                new HDBOfficerService((ProjectRepository) projectRepo, (EnquiryService) enquirySvc, (ApplicantService) applicantSvc);
+        IHDBOfficerService officerSvc = new HDBOfficerService((ProjectRepository) projectRepo,
+                (EnquiryService) enquirySvc, (ApplicantService) applicantSvc);
 
         // 4) Main login/logout loop
         Scanner sc = new Scanner(System.in);
-        MAIN_LOOP:
-        while (true) {
+        MAIN_LOOP: while (true) {
             System.out.println("\n=== BTO Application System ===");
             System.out.println("1) Login");
             System.out.println("0) Exit");
@@ -54,7 +52,8 @@ public class BTOApp {
                     String role = user.getRole().toLowerCase();
                     switch (role) {
                         case "applicant":
-                            runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, projectRepo.getAllProjects(), sc);
+                            runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, projectRepo.getAllProjects(),
+                                    sc);
                             break;
                         case "hdb manager":
                             runManagerLoop((HDBManager) user, managerSvc, projectRepo, sc, enquirySvc);
@@ -90,11 +89,11 @@ public class BTOApp {
      * BTOProject and adds to projectRepo and to the manager.
      */
     private static void preloadProjects(IFileManager fileManager,
-                                        IProjectRepository projectRepo) throws IOException {
+            IProjectRepository projectRepo) throws IOException {
         Path path = Paths.get("data", "ProjectList.txt");
         List<String> lines = Files.readAllLines(path).stream()
-            .filter(l -> !l.startsWith("Project Name") && !l.isBlank())
-            .collect(Collectors.toList());
+                .filter(l -> !l.startsWith("Project Name") && !l.isBlank())
+                .collect(Collectors.toList());
 
         DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         Map<String, List<List<String>>> userData = fileManager.getDatabyRole();
@@ -103,15 +102,16 @@ public class BTOApp {
         for (String line : lines) {
             String[] cols = line.split("\\t");
 
-            String projName    = cols[0];
-            String neighborhood= cols[1];
-            String t1          = cols[2];
-            int    u1          = Integer.parseInt(cols[3]);
-            int    p1  = Integer.parseInt(cols[4]);
-            String t2          = cols[5];
-            int    u2          = Integer.parseInt(cols[6]);
-            int    p2  = Integer.parseInt(cols[7]); 
-            int    maxOfficers = Integer.parseInt(cols[11]);
+            String projName = cols[0];
+            String neighborhood = cols[1];
+            String t1 = cols[2];
+            int u1 = Integer.parseInt(cols[3]);
+            int p1 = Integer.parseInt(cols[4]);
+            String t2 = cols[5];
+            int u2 = Integer.parseInt(cols[6]);
+            int p2 = Integer.parseInt(cols[7]);
+            int maxOfficers = Integer.parseInt(cols[11]);
+            List<String> assignedOfficers = Arrays.asList(cols[12].split(","));
 
             LocalDate sLd = LocalDate.parse(cols[8], fmt);
             LocalDate eLd = LocalDate.parse(cols[9], fmt);
@@ -120,33 +120,28 @@ public class BTOApp {
 
             String mgrName = cols[10];
             Optional<List<String>> maybeMgr = mgrRows.stream()
-                .filter(r -> r.get(0).equalsIgnoreCase(mgrName))
-                .findFirst();
+                    .filter(r -> r.get(0).equalsIgnoreCase(mgrName))
+                    .findFirst();
 
             if (maybeMgr.isEmpty()) {
                 System.err.printf("  ! skipping \"%s\": no manager named \"%s\"%n",
-                                  projName, mgrName);
+                        projName, mgrName);
                 continue;
             }
 
             List<String> rec = maybeMgr.get();
             String mgrNric = rec.get(1);
-            int    mgrAge  = Integer.parseInt(rec.get(2));
-            String mgrMS   = rec.get(3);
-            String mgrPwd  = rec.get(4);
+            int mgrAge = Integer.parseInt(rec.get(2));
+            String mgrMS = rec.get(3);
+            String mgrPwd = rec.get(4);
 
             HDBManager manager = new HDBManager(mgrNric, mgrName, mgrAge, mgrMS, mgrPwd);
 
-            String[] officerNames = cols[12].split(",");
-            List<String> officerList = Arrays.stream(officerNames)
-                                            .map(String::trim)
-                                            .filter(s -> !s.isEmpty())
-                                            .toList();
+            List<String> officerList = Arrays.asList(cols[12].split(","));
 
             BTOProject project = new BTOProject(
-                manager, projName, neighborhood, sd, ed,
-                List.of(t1, t2), u1, u2, p1, p2, maxOfficers, officerList
-            );
+                    manager, projName, neighborhood, sd, ed,
+                    List.of(t1, t2), u1, u2, maxOfficers, p1, p2, officerList);
 
             projectRepo.addProject(project);
             manager.addProject(project);
@@ -158,10 +153,10 @@ public class BTOApp {
     // Applicant menu loop
     // ------------------------------------------------------------------------
     private static void runApplicantLoop(Applicant me,
-                                         IApplicantService svc,
-                                         IEnquiryService esvc,
-                                         List<BTOProject> projects,
-                                         Scanner sc) {
+            IApplicantService svc,
+            IEnquiryService esvc,
+            List<BTOProject> projects,
+            Scanner sc) {
         while (true) {
             System.out.println("\n-- Applicant Menu --");
             System.out.println("1) View available projects");
@@ -188,13 +183,13 @@ public class BTOApp {
                     for (BTOProject p : available) {
                         System.out.printf("%s - %s%n", p.getProjectName(), p.getNeighborhood());
 
-                        if (filter == 0 || filter == 1)        // 2‑room
+                        if (filter == 0 || filter == 1) // 2‑room
                             System.out.printf("  2-room : %d units  @ $%,d%n",
-                                            p.getUnits("2-room"), p.getPrice("2-room"));
+                                    p.getUnits("2-room"), p.getPrice("2-room"));
 
-                        if (filter == 0 || filter == 2)        // 3‑room
+                        if (filter == 0 || filter == 2) // 3‑room
                             System.out.printf("  3-room : %d units  @ $%,d%n",
-                                            p.getUnits("3-room"), p.getPrice("3-room"));
+                                    p.getUnits("3-room"), p.getPrice("3-room"));
 
                         System.out.println();
                     }
@@ -213,7 +208,7 @@ public class BTOApp {
                     for (int i = 0; i < available.size(); i++) {
                         BTOProject p = available.get(i);
                         System.out.printf("%d) %s - %s%n", i + 1,
-                            p.getProjectName(), p.getNeighborhood());
+                                p.getProjectName(), p.getNeighborhood());
                     }
 
                     // 3) let user pick one
@@ -237,7 +232,7 @@ public class BTOApp {
                             String type = types.get(j);
                             int units = selected.getUnits(type);
                             System.out.printf("%d) %s (%d units available)%n",
-                                j + 1, type, units);
+                                    j + 1, type, units);
                         }
                         System.out.print("Select flat type (0 to cancel): ");
                         String choice_num = sc.nextLine().trim();
@@ -284,15 +279,15 @@ public class BTOApp {
                     for (int i = 0; i < available.size(); i++) {
                         BTOProject p = available.get(i);
                         System.out.printf("%d) %s - %s%n",
-                            i + 1,
-                            p.getProjectName(),
-                            p.getNeighborhood());
+                                i + 1,
+                                p.getProjectName(),
+                                p.getNeighborhood());
                     }
 
                     // 3) let user pick one
                     System.out.print("Select project (0 to cancel): ");
                     int projChoice = sc.nextInt();
-                    sc.nextLine();  // consume the '\n'
+                    sc.nextLine(); // consume the '\n'
                     if (projChoice == 0) {
                         System.out.println("Enquiry cancelled.");
                         break;
@@ -399,10 +394,14 @@ public class BTOApp {
                         int twoRoomUnits = Integer.parseInt(sc.nextLine());
                         System.out.print("Number of 3-room units: ");
                         int threeRoomUnits = Integer.parseInt(sc.nextLine());
+                        System.out.print("Price of 2-room units: ");
+                        int twoRoomPrice = Integer.parseInt(sc.nextLine());
+                        System.out.print("Price of 3-room units: ");
+                        int threeRoomPrice = Integer.parseInt(sc.nextLine());
                         
                         List<String> flatTypes = List.of("2-room", "3-room");
                         boolean success = svc.createProject(me, name, neighborhood, startDate, 
-                                             endDate, flatTypes, twoRoomUnits, threeRoomUnits);
+                                             endDate, flatTypes, twoRoomUnits, threeRoomUnits, twoRoomPrice, threeRoomPrice);
                         
                         if (success) {
                             System.out.println("Project created successfully.");
@@ -599,12 +598,13 @@ public class BTOApp {
                         System.out.println("\nProject: " + project.getProjectName());
                         System.out.println("Assigned Officers:");
 
-                        List<HDBOfficer> assigned = project.getHDBOfficers();
+                        List<String> assigned = project.getAssignedOfficer();
                         if (assigned.isEmpty()) {
                             System.out.println("  (none)");
                         } else {
-                            for (HDBOfficer o : assigned) {
-                                System.out.printf("  - %s (NRIC: %s)\n", o.getName(), o.getNRIC());
+                            for (String o : assigned) {
+                                
+                                System.out.printf("  - %s\n", o);
                             }
                         }
 
@@ -614,7 +614,7 @@ public class BTOApp {
                             System.out.println("  (none)");
                         } else {
                             for (HDBOfficer o : pending) {
-                                System.out.printf("  - %s (NRIC: %s)\n", o.getName(), o.getNRIC());
+                                System.out.printf("  - %s\n", o.getName());
                             }
                         }
                     }
@@ -920,13 +920,13 @@ public class BTOApp {
             }
         }
     }
-    
+
     // ------------------------------------------------------------------------
     // Officer menu loop
     // ------------------------------------------------------------------------
     public static void runOfficerLoop(HDBOfficer me, IHDBOfficerService svc, IApplicantService applicantSvc,
-                                      IEnquiryService enquirySvc, List<BTOProject> projects,
-                                      Scanner sc, Authenticator auth, IFileManager fileManager) {
+            IEnquiryService enquirySvc, List<BTOProject> projects,
+            Scanner sc, Authenticator auth, IFileManager fileManager) {
 
         while (true) {
 
@@ -1020,14 +1020,14 @@ public class BTOApp {
                         System.out.println("You must be handling a project first.");
                         break;
                     }
-                
+
                     // 1) locate the project the officer is handling
                     BTOProject myProject = svc.viewHandledProject(me);
                     if (myProject == null) {
                         System.out.println("Project not found.");
                         break;
                     }
-                
+
                     // 2) collect all applications for that project in SUCCESSFUL state
                     List<Application> successApps = new ArrayList<>();
                     for (Application a : myProject.getApplications()) {
@@ -1035,21 +1035,21 @@ public class BTOApp {
                             successApps.add(a);
                         }
                     }
-                
+
                     if (successApps.isEmpty()) {
                         System.out.println("There are no applicants in 'Successful' state for booking.");
                         break;
                     }
-                
+
                     // 3) display list to officer
                     System.out.println("\nApplicants ready for booking:");
                     for (int i = 0; i < successApps.size(); i++) {
                         Application a = successApps.get(i);
                         System.out.printf("%d) %s  |  %s  |  Flat type: %s\n",
-                                          i + 1,
-                                          a.getApplicant().getName(),
-                                          a.getApplicant().getNRIC(),
-                                          a.getFlatType());
+                                i + 1,
+                                a.getApplicant().getName(),
+                                a.getApplicant().getNRIC(),
+                                a.getFlatType());
                     }
                     System.out.print("Select applicant (0 to cancel): ");
                     String sel = sc.nextLine().trim();
@@ -1068,11 +1068,11 @@ public class BTOApp {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                
+
                     Application chosen = successApps.get(idx - 1);
                     String applicantNric = chosen.getApplicant().getNRIC();
-                    String flatType      = chosen.getFlatType();
-                
+                    String flatType = chosen.getFlatType();
+
                     // 4) delegate to service – it already validates state & units
                     svc.bookFlat(applicantNric, flatType);
                     break;
@@ -1110,13 +1110,14 @@ public class BTOApp {
             }
         }
     }
+
     // ------------------------------------------------------------------------
     // Helper to find a project by name
     // ------------------------------------------------------------------------
     private static BTOProject findProject(List<BTOProject> list, String name) {
         return list.stream()
-                   .filter(p -> p.getProjectName().equalsIgnoreCase(name))
-                   .findFirst()
-                   .orElse(null);
+                .filter(p -> p.getProjectName().equalsIgnoreCase(name))
+                .findFirst()
+                .orElse(null);
     }
 }

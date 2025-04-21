@@ -16,7 +16,9 @@ public interface IHDBManagerService {
                           Date endDate,
                           List<String> flatTypes, 
                           int twoRoomUnits, 
-                          int threeRoomUnits);
+                          int threeRoomUnits,
+                          int twoRoomPrice,
+                          int threeRoomPrice);
 
     List<BTOProject> viewAllProjects();
     List<BTOProject> viewOwnProjects(HDBManager manager);
