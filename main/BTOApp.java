@@ -107,8 +107,10 @@ public class BTOApp {
             String neighborhood= cols[1];
             String t1          = cols[2];
             int    u1          = Integer.parseInt(cols[3]);
+            int    p1  = Integer.parseInt(cols[4]);
             String t2          = cols[5];
             int    u2          = Integer.parseInt(cols[6]);
+            int    p2  = Integer.parseInt(cols[7]); 
             int    maxOfficers = Integer.parseInt(cols[11]);
 
             LocalDate sLd = LocalDate.parse(cols[8], fmt);
@@ -143,7 +145,7 @@ public class BTOApp {
 
             BTOProject project = new BTOProject(
                 manager, projName, neighborhood, sd, ed,
-                List.of(t1, t2), u1, u2, maxOfficers, officerList
+                List.of(t1, t2), u1, u2, p1, p2, maxOfficers, officerList
             );
 
             projectRepo.addProject(project);
@@ -177,31 +179,24 @@ public class BTOApp {
 
             switch (choice) {
                 case "1": {
-                    System.out.println("\n====== Available Projects ======");
-                    // only list those visible *and* whose dates include today
+                    System.out.print("\nFilter by flat type?\n0) All   1) 2-room   2) 3-room\n> ");
+                    int filter = Integer.parseInt(sc.nextLine().trim());
+
                     List<BTOProject> available = svc.viewAvailableProjects(me, projects);
-                    if (available.isEmpty()) {
-                        System.out.println("No projects are accepting applications right now.");
-                    } else {
-                        for (int i = 0; i < available.size(); i++) {
-                            BTOProject p = available.get(i);
-                            // 1. Acacia Breeze – Yishun
-                            System.out.printf("%d. %s - %s%n",
-                                i + 1,
-                                p.getProjectName(),
-                                p.getNeighborhood());
-                
-                            // Application Period: 15/02/2025 to 20/03/2025
-                            String start = p.getStartDate().toInstant()
-                                            .atZone(ZoneId.systemDefault())
-                                            .toLocalDate()
-                                            .format(DISPLAY_FMT);
-                            String end   = p.getEndDate().toInstant()
-                                            .atZone(ZoneId.systemDefault())
-                                            .toLocalDate()
-                                            .format(DISPLAY_FMT);
-                            System.out.printf("   Application Period: %s to %s%n%n", start, end);
-                        }
+                    System.out.println("\n====== Available Projects ======");
+
+                    for (BTOProject p : available) {
+                        System.out.printf("%s - %s%n", p.getProjectName(), p.getNeighborhood());
+
+                        if (filter == 0 || filter == 1)        // 2‑room
+                            System.out.printf("  2-room : %d units  @ $%,d%n",
+                                            p.getUnits("2-room"), p.getPrice("2-room"));
+
+                        if (filter == 0 || filter == 2)        // 3‑room
+                            System.out.printf("  3-room : %d units  @ $%,d%n",
+                                            p.getUnits("3-room"), p.getPrice("3-room"));
+
+                        System.out.println();
                     }
                     break;
                 }

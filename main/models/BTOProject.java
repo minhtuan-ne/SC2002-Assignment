@@ -22,8 +22,10 @@ public class BTOProject {
     private List<HDBOfficer> HDBOfficers;// The officers assigned to handle
     private List<Application> applications;
     private List<String> assignedOfficer;
+    private int twoRoomPrice;          
+    private int threeRoomPrice;
 
-    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers, List<String> assignedOfficer) {
+    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers, int twoRoomPrice, int threeRoomPrice, List<String> assignedOfficer) {
         this.manager = manager;
         this.projectName = projectName;
         this.neighborhood = neighborhood;
@@ -37,6 +39,8 @@ public class BTOProject {
         this.HDBOfficers = new ArrayList<>();
         this.applications = new ArrayList<>();
         this.assignedOfficer = assignedOfficer;
+        this.twoRoomPrice   = twoRoomPrice;           
+        this.threeRoomPrice = threeRoomPrice;   
     }
     
     public List<String> getAssignedOfficer() {
@@ -195,4 +199,11 @@ public class BTOProject {
     public void removePendingRegistration(HDBOfficer officer) {
         pendingRegistrations.remove(officer);
     }
+
+    public int getPrice(String flatType) {
+        return "2-room".equalsIgnoreCase(flatType) ? twoRoomPrice
+                                                   : threeRoomPrice;
+    }
+    public int getTwoRoomPrice()  { return twoRoomPrice;  }
+    public int getThreeRoomPrice(){ return threeRoomPrice;}
 }
