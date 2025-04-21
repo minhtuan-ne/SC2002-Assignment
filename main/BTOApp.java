@@ -222,9 +222,8 @@ public class BTOApp {
                     }
 
                     // 3) let user pick one
-                    System.out.print("> ");
-                    int projChoice = sc.nextInt();
-                    sc.nextLine();  // consume the '\n' left behind by nextInt()
+                    System.out.print("Select project (0 to cancel): ");
+                    int projChoice = Integer.parseInt(sc.nextLine().trim());
                     if (projChoice == 0) {
                         System.out.println("Application cancelled.");
                         break;
@@ -235,20 +234,39 @@ public class BTOApp {
                     }
                     BTOProject selected = available.get(projChoice - 1);
 
-                    // 4) now loop for flat‑type until they succeed or cancel
+                    // 4) now selection menu for flat type
                     while (true) {
-                        System.out.print("Flat type (2-room/3-room, or 0 to cancel): ");
-                        String ftype = sc.nextLine().trim();
-                        if (ftype.equals("0")) {
+                        List<String> types = selected.getFlatTypes();
+                        System.out.println("\n-- Flat Types --");
+                        for (int j = 0; j < types.size(); j++) {
+                            String type = types.get(j);
+                            int units = selected.getUnits(type);
+                            System.out.printf("%d) %s (%d units available)%n",
+                                j + 1, type, units);
+                        }
+                        System.out.print("Select flat type (0 to cancel): ");
+                        String choice_num = sc.nextLine().trim();
+                        int typeChoice;
+                        try {
+                            typeChoice = Integer.parseInt(choice_num);
+                        } catch (NumberFormatException e) {
+                            System.out.println("Invalid selection.");
+                            continue;
+                        }
+                        if (typeChoice == 0) {
                             System.out.println("Application cancelled.");
                             break;
                         }
-                        // have apply(...) return boolean success
+                        if (typeChoice < 1 || typeChoice > types.size()) {
+                            System.out.println("Invalid selection.");
+                            continue;
+                        }
+                        String ftype = types.get(typeChoice - 1);
                         if (svc.apply(me, selected, ftype)) {
-                            // once it succeeds, stop retrying
+                            // success → exit flat‐type loop
                             break;
                         }
-                        // else it printed a validation error; retry
+                        // otherwise retry
                     }
                     break;
                 }
@@ -256,7 +274,7 @@ public class BTOApp {
                     svc.viewAppliedProject(me, projects);
                     break;
                 case "4":
-                    svc.requestWithdrawal(me);
+                    svc.requestWithdrawal(me, projects);
                     break;
                 case "5": {
                     // 1) get only those projects currently open & visible

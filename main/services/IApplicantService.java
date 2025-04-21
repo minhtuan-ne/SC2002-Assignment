@@ -10,7 +10,7 @@ public interface IApplicantService {
     boolean hasApplied(Applicant applicant);
     Application getApplication(String nric);
     void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects);
-    boolean requestWithdrawal(Applicant applicant);
+    boolean requestWithdrawal(Applicant applicant, List<BTOProject> allProjects);
     List<BTOProject> viewAvailableProjects(Applicant applicant, List<BTOProject> allProjects);
     boolean changePassword(Applicant applicant, String oldPassword, String newPassword);
 }

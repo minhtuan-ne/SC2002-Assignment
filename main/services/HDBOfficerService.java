@@ -128,7 +128,7 @@ public class HDBOfficerService implements IHDBOfficerService {
         BTOProject proj = findProject(app.getProjectName());
         if (proj == null) { System.out.println("Project not found."); return false; }
 
-        if (!proj.decrementFlatCount(flatType)) {
+        if (proj.getUnits(flatType) <= 0) {
             System.out.println("No remaining units of " + flatType);
             return false;
         }

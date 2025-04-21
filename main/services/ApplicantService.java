@@ -70,7 +70,12 @@ public class ApplicantService implements IApplicantService {
     @Override
     public boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
-            if (a.getApplicant().getNRIC().equals(applicant.getNRIC()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
+            if (!a.getApplicant().getNRIC().equals(applicant.getNRIC())) continue;
+            String st = a.getStatus();
+            // only these count as “active” applications
+            if (st.equalsIgnoreCase("Pending")
+             || st.equalsIgnoreCase("Successful")
+             || st.equalsIgnoreCase("Booked")) {
                 return true;
             }
         }
@@ -117,22 +122,43 @@ public class ApplicantService implements IApplicantService {
     }
 
     @Override
-    public boolean requestWithdrawal(Applicant applicant) {
+    public boolean requestWithdrawal(Applicant applicant, List<BTOProject> allProjects) {
         Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application to withdraw.");
             return false;
         }
 
-        if (app.getStatus().equalsIgnoreCase("Pending") || app.getStatus().equalsIgnoreCase("Successful")) {
-            app.setStatus("Unsuccessful");
+        String status = app.getStatus();
+        // Allow withdrawal even if already Booked
+        if (status.equalsIgnoreCase("Pending")
+        || status.equalsIgnoreCase("Successful")
+        || status.equalsIgnoreCase("Booked")) {
+
+            // 1) restore flat count on the project
+            if(!status.equalsIgnoreCase("Pending")){
+                String projName = app.getProjectName();
+                String flatType = app.getFlatType();
+                for (BTOProject p : allProjects) {
+                    if (p.getProjectName().equalsIgnoreCase(projName)) {
+                        // increment the available units
+                        int current = p.getUnits(flatType);
+                        p.setUnits(flatType, current + 1);
+                        break;
+                    }
+                }
+            }
+
+            // 2) mark application as withdrawn
+            app.setStatus("Withdrawn");
             System.out.println("Application withdrawn.");
             return true;
         }
 
-        System.out.println("Cannot withdraw application in current state: " + app.getStatus());
+        System.out.println("Cannot withdraw application in current state: " + status);
         return false;
     }
+
     @Override
     public List<BTOProject> viewAvailableProjects(Applicant applicant, List<BTOProject> allProjects) {
         List<BTOProject> result = new ArrayList<>();
