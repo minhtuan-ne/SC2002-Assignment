@@ -18,6 +18,7 @@ public interface IFileManager {
     List<HDBOfficer> loadOfficersFromFile(String path);
     
     void saveOfficersToFile(String path, List<HDBOfficer> officers);
+    public void updateOfficerInFile(HDBOfficer updatedOfficer, String path);
 
     boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
                       Date startDate, Date endDate, List<String> flatTypes,
