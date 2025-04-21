@@ -195,6 +195,7 @@ public class HDBManagerService implements IHDBManagerService {
         }
 
         officer.approveRegistration(project.getProjectName());
+        fileManager.updateOfficerInFile(officer, "data/OfficerList.txt");
         // Update the project file with the new officer assignment
         fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officer.getName(), true);
         project.removePendingRegistration(officer);    // ✅ remove from pending list
