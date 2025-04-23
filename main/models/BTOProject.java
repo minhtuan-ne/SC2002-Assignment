@@ -12,7 +12,7 @@ public class BTOProject {
     private String neighborhood;              // E.g., Yishun, Boon Lay, etc.
     public Date startDate;                    // Application opening date
     public Date endDate;                      // Application closing date
-    private List<String> flatTypes;      // ["2-room", "3-room"]
+    private List<String> flatTypes;           // ["2-room", "3-room"]
     
     private int twoRoomUnitsAvailable;        // How many 2-room units are available
     private int threeRoomUnitsAvailable;      // How many 3-room units are available

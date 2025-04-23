@@ -1,11 +1,10 @@
 package main.services;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import main.models.*;
 import main.repositories.ProjectRepository;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Date;
 
 
 /**
@@ -16,7 +15,7 @@ import java.util.Date;
  *
  * No additional repos are introduced.
  */
-public class HDBOfficerService implements IHDBOfficerService {
+public class HDBOfficerService {
 
     private final ProjectRepository projectRepo;
     private final EnquiryService    enquirySvc;   // concrete type gives us getAllEnquiries()
@@ -35,7 +34,6 @@ public class HDBOfficerService implements IHDBOfficerService {
     /*  1 – Registration workflow                               */
     /* -------------------------------------------------------- */
 
-    @Override
     public boolean registerToHandleProject(HDBOfficer officer, String projectId) {
         // Find the target project
         BTOProject project = findProject(projectId);
@@ -73,8 +71,6 @@ public class HDBOfficerService implements IHDBOfficerService {
         return true;
     }
 
-
-    @Override
     public void cancelRegistration(HDBOfficer officer) {
         if (officer.getRegStatus() == HDBOfficer.RegistrationStatus.NONE) {
             System.out.println("No active request / assignment to cancel.");
@@ -85,8 +81,8 @@ public class HDBOfficerService implements IHDBOfficerService {
     }
 
     /* Read‑only helpers */
-    @Override public String getRegistrationStatus(HDBOfficer o){ return o.getRegStatus().name(); }
-    @Override public BTOProject viewHandledProject(HDBOfficer o){
+    public String getRegistrationStatus(HDBOfficer o){ return o.getRegStatus().name(); }
+    public BTOProject viewHandledProject(HDBOfficer o){
         return o.isHandlingProject() ? findProject(o.getHandlingProjectId()) : null;
     }
 
@@ -94,7 +90,6 @@ public class HDBOfficerService implements IHDBOfficerService {
     /*  2 – Enquiries                                           */
     /* -------------------------------------------------------- */
 
-    @Override
     public List<Enquiry> viewProjectEnquiries(HDBOfficer officer) {
         List<Enquiry> all = enquirySvc.getAllEnquiries();
         List<Enquiry> res = new ArrayList<>();
@@ -107,7 +102,6 @@ public class HDBOfficerService implements IHDBOfficerService {
         return res;
     }
 
-    @Override
     public void replyToEnquiry(String enquiryId, String message) {
         enquirySvc.replyToEnquiry(enquiryId, message);
     }
@@ -116,7 +110,6 @@ public class HDBOfficerService implements IHDBOfficerService {
     /*  3 – Flat booking duties                                 */
     /* -------------------------------------------------------- */
 
-    @Override
     public boolean bookFlat(String applicantNric, String flatType) {
 
         Application app = applicantSvc.getApplication(applicantNric);
@@ -143,7 +136,6 @@ public class HDBOfficerService implements IHDBOfficerService {
         return true;
     }
 
-    @Override
     public void generateReceipt(String applicantNric) {
         Application app = applicantSvc.getApplication(applicantNric);
         if (app == null || !"Booked".equalsIgnoreCase(app.getStatus())) {
