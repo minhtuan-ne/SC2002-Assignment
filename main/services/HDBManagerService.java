@@ -1,17 +1,16 @@
 // main/services/HDBManagerService.java
 package main.services;
 
-import main.models.*;
-import main.repositories.IProjectRepository;
-import main.util.IFileManager;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
+import main.models.*;
+import main.repositories.IProjectRepository;
+import main.util.IFileManager;
 
-public class HDBManagerService implements IHDBManagerService {
+public class HDBManagerService {
     private final IFileManager fileManager;
     private final IProjectRepository projectRepository;
 
@@ -22,7 +21,6 @@ public class HDBManagerService implements IHDBManagerService {
         this.fileManager = fileManager;
     }
 
-    @Override
     public boolean createProject(HDBManager manager,
                                  String name,
                                  String neighborhood,
@@ -78,13 +76,11 @@ public class HDBManagerService implements IHDBManagerService {
         
         return true;
     }
-    
-    @Override
+
     public List<BTOProject> viewAllProjects() {
         return projectRepository.getAllProjects();
     }
 
-    @Override
     public List<BTOProject> viewOwnProjects(HDBManager manager) {
        
         List<BTOProject> ownProjects = manager.getProjects();
@@ -103,14 +99,12 @@ public class HDBManagerService implements IHDBManagerService {
         return ownProjects;
     }
 
-    @Override
     public void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
         if (project.getManagerNRIC().equals(manager.getNRIC())) {
             project.setVisibility(visibility);
         }
     }
 
-    @Override
     public void editBTOProject(HDBManager manager,
                               BTOProject project,
                               String newName,
@@ -154,7 +148,6 @@ public class HDBManagerService implements IHDBManagerService {
         }
     }
     
-    @Override
     public void deleteBTOProject(HDBManager manager, BTOProject project) {
         
         
@@ -177,7 +170,6 @@ public class HDBManagerService implements IHDBManagerService {
         }
     }
 
-    @Override
     public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (!project.getManager().getNRIC().equalsIgnoreCase(manager.getNRIC())) {
             System.out.println("Wrong Manager.");
@@ -204,7 +196,6 @@ public class HDBManagerService implements IHDBManagerService {
         return true;
     }
 
-    @Override
     public boolean handleBTOApplication(HDBManager manager, Application application, boolean approve) {
         String projectName = application.getProjectName();
         
@@ -248,7 +239,6 @@ public class HDBManagerService implements IHDBManagerService {
         }
     }
     
-    @Override
     public void handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
         for (BTOProject project : projectRepository.getAllProjects()) {
@@ -267,7 +257,6 @@ public class HDBManagerService implements IHDBManagerService {
         }
     }
 
-    @Override
     public void bookingReport(HDBManager manager, String filter) {
         List<BTOProject> all = manager.getProjects();
         for (BTOProject project : all) {
@@ -284,13 +273,9 @@ public class HDBManagerService implements IHDBManagerService {
         }
     }
     public List<String> getAssignedOfficer() {
-        if (assignedOfficer == null) {
-            assignedOfficer = new ArrayList<>();
-        }
-        return assignedOfficer;
+        return assignedOfficer == null ? assignedOfficer: new ArrayList<>();
     }
   
-    @Override
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC) {
         if (project.getManagerNRIC().equals(manager.getNRIC())) {
             project.addAssignedOfficer(officerNRIC);
@@ -306,7 +291,6 @@ public class HDBManagerService implements IHDBManagerService {
         return false;
     }
 
-    @Override
     public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, String officerNRIC) {
         if (project.getManager().equals(manager)) {
             project.removeAssignedOfficer(officerNRIC);
@@ -333,23 +317,5 @@ public class HDBManagerService implements IHDBManagerService {
         }
         
         return "Unknown"; // Fallback if officer not found
-    }
-
-    @Override
-    public boolean changePassword(HDBManager manager, String oldPassword, String newPassword) {
-        try {
-            // 1) update in‑memory
-            manager.changePassword(oldPassword, newPassword);
-            // 2) persist to disk
-            fileManager.updatePassword("Manager", manager.getNRIC(), newPassword);
-            System.out.println("Password changed successfully.");
-            return true;
-        } catch (IllegalArgumentException e) {
-            System.out.println("Error: " + e.getMessage());
-            return false;
-        } catch (IOException ioe) {
-            System.out.println("Failed to save new password: " + ioe.getMessage());
-            return false;
-        }
     }
 }

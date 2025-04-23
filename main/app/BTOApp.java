@@ -27,10 +27,10 @@ public class BTOApp {
         }
 
         // 3) Services
-        IHDBManagerService  managerSvc   = new HDBManagerService(projectRepo, fileManager);
+        HDBManagerService  managerSvc   = new HDBManagerService(projectRepo, fileManager);
         IEnquiryService enquirySvc    = new EnquiryService();
         ApplicantService applicantSvc = new ApplicantService();
-        IHDBOfficerService officerSvc = new HDBOfficerService((ProjectRepository) projectRepo, (EnquiryService) enquirySvc, (ApplicantService) applicantSvc);
+        HDBOfficerService officerSvc = new HDBOfficerService((ProjectRepository) projectRepo, (ApplicantService) applicantSvc);
 
         // 4) Main login/logout loop
         Scanner sc = new Scanner(System.in);
@@ -68,7 +68,7 @@ public class BTOApp {
         sc.close();
     }
 
-    /**
+    /*
      * Loads data/ProjectList.txt (tab‑separated), skips header,
      * parses each row, finds matching manager by name, creates
      * BTOProject and adds to projectRepo and to the manager.

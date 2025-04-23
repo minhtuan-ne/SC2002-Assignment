@@ -1,13 +1,11 @@
 package main.app;
 
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import main.models.*;
 import main.services.*;
 
 public class ApplicantHandler implements IUserHandler {
-    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private final ApplicantService applicantSvc;
     private final IEnquiryService enquirySvc;
     private final List<BTOProject> allProjects;

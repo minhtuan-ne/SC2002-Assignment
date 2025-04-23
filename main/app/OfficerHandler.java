@@ -3,12 +3,12 @@ package main.app;
 import java.util.*;
 import java.util.stream.Collectors;
 import main.models.*;
+import main.repositories.IProjectRepository;
 import main.services.*;
 import main.util.*;
-import main.repositories.IProjectRepository;
 
 public class OfficerHandler implements IUserHandler{
-    private final IHDBOfficerService officerService;
+    private final HDBOfficerService officerService;
     private final ApplicantService applicantService;
     private final IEnquiryService enquiryService;
     private final IProjectRepository projectRepo;
@@ -16,7 +16,7 @@ public class OfficerHandler implements IUserHandler{
     private final IFileManager fileManager;
         
     public OfficerHandler(
-            IHDBOfficerService officerService,
+            HDBOfficerService officerService,
             ApplicantService applicantService,
             IEnquiryService enquiryService,
             IProjectRepository projectRepo,
@@ -44,7 +44,7 @@ public class OfficerHandler implements IUserHandler{
             fileManager);
     }
 
-    public static void runOfficerLoop(HDBOfficer me, IHDBOfficerService svc, IApplicantService applicantSvc,
+    public static void runOfficerLoop(HDBOfficer me, HDBOfficerService svc, ApplicantService applicantSvc,
         IEnquiryService enquirySvc, List<BTOProject> projects, Scanner sc, Authenticator auth, IFileManager fileManager) {
         while (true) {
 
@@ -63,13 +63,12 @@ public class OfficerHandler implements IUserHandler{
             System.out.println("6) Book a flat for an applicant");
             System.out.println("7) Generate booking receipt");
             System.out.println("8) Switch to Applicant functions");
+            System.out.println("9) Change password");
             System.out.println("0) Logout");
             System.out.print("> ");
             String choice = sc.nextLine().trim();
 
             switch (choice) {
-
-                /* 1 ─ Register request */
                 case "1": {
                     System.out.print("Project name: ");
                     String pid = sc.nextLine().trim();
@@ -88,12 +87,10 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                /* 2 ─ Cancel / remove */
                 case "2":
                     svc.cancelRegistration(me);
                     break;
 
-                /* 3 ─ View my project (visibility ignored) */
                 case "3": {
                     BTOProject p = svc.viewHandledProject(me);
                     if (p == null) {
@@ -109,9 +106,15 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                /* 4 ─ View enquiries */
                 case "4": {
-                    var list = svc.viewProjectEnquiries(me);
+                    List<Enquiry> all = enquirySvc.getAllEnquiries();
+                    List<Enquiry> list = new ArrayList<>();
+                    if (me.isHandlingProject()){
+                        String pid = me.getHandlingProjectId();
+                        for (Enquiry e : all)
+                            if (e.getProjectName().equalsIgnoreCase(pid))
+                                list.add(e);    
+                    }                
                     if (list.isEmpty()) {
                         System.out.println("No enquiries for your project.");
                     } else {
@@ -122,17 +125,15 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                /* 5 ─ Reply enquiry */
                 case "5": {
                     System.out.print("Enquiry ID: ");
                     String id = sc.nextLine();
                     System.out.print("Reply message: ");
                     String msg = sc.nextLine();
-                    svc.replyToEnquiry(id, msg);
+                    enquirySvc.replyToEnquiry(id, msg);
                     break;
                 }
 
-                /* 6 ─ Book flat */
                 case "6": {
                     if (!me.isHandlingProject()) {
                         System.out.println("You must be handling a project first.");
@@ -196,7 +197,6 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                /* 7 ─ Generate receipt */
                 case "7": {
                     System.out.print("Applicant NRIC: ");
                     String aNric = sc.nextLine();
@@ -204,14 +204,20 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                /* 8 ─ Switch to Applicant menu (re‑use existing loop) */
                 case "8":
                     new ApplicantHandler(applicantSvc, enquirySvc, projects).run(me, sc);
                     break;
 
-                /* 0 ─ Logout */
+                case "9": {
+                    System.out.print("Current password: ");
+                    String oldP = sc.nextLine();
+                    System.out.print("New password: ");
+                    String newP = sc.nextLine();
+                    me.changePassword(oldP, newP);
+                    break;
+                }
+
                 case "0": {
-                    // Save officer state upon logout
                     List<HDBOfficer> officers = auth.getUsers().stream()
                             .filter(u -> u instanceof HDBOfficer)
                             .map(u -> (HDBOfficer) u)

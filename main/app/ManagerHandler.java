@@ -1,22 +1,19 @@
 package main.app;
 
-import main.models.*;
-import main.repositories.IProjectRepository;
-import main.services.*;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Scanner;
 import java.util.*;
+import main.models.*;
+import main.repositories.IProjectRepository;
+import main.services.*;
 
 public class ManagerHandler implements IUserHandler {
-    private static final DateTimeFormatter DISPLAY_FMT = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-    private final IHDBManagerService managerService;
+    private final HDBManagerService managerService;
     private final IProjectRepository projectRepo;
     private final IEnquiryService enquiryService;
 
-    public ManagerHandler(IHDBManagerService managerService, IProjectRepository projectRepo, IEnquiryService enquiryService) {
+    public ManagerHandler(HDBManagerService managerService, IProjectRepository projectRepo, IEnquiryService enquiryService) {
         this.managerService = managerService;
         this.projectRepo = projectRepo;
         this.enquiryService = enquiryService;
@@ -27,7 +24,7 @@ public class ManagerHandler implements IUserHandler {
         runManagerLoop((HDBManager) user, managerService, projectRepo, sc, enquiryService);
     }
 
-    private static void runManagerLoop(HDBManager me, IHDBManagerService svc, IProjectRepository repo, Scanner sc, IEnquiryService iesvc) {
+    private static void runManagerLoop(HDBManager me, HDBManagerService svc, IProjectRepository repo, Scanner sc, IEnquiryService iesvc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");
             System.out.println("1) Create project");
@@ -580,7 +577,7 @@ public class ManagerHandler implements IUserHandler {
                     String oldP = sc.nextLine();
                     System.out.print("New password: ");
                     String newP = sc.nextLine();
-                    svc.changePassword(me, oldP, newP);
+                    me.changePassword(oldP, newP);
                     break;
                 }
 

@@ -1,33 +1,16 @@
 package main.services;
 
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import main.models.*;
 import main.repositories.ProjectRepository;
 
-
-/**
- * Concrete implementation that relies ONLY on:
- *   • ProjectRepository      (for project list & flat counts)
- *   • ApplicantService       (static apps list & passwords)
- *   • EnquiryService         (existing list + reply)
- *
- * No additional repos are introduced.
- */
 public class HDBOfficerService {
-
     private final ProjectRepository projectRepo;
-    private final EnquiryService    enquirySvc;   // concrete type gives us getAllEnquiries()
     private final ApplicantService applicantSvc;
 
-    // constructor — add param & assign
-    public HDBOfficerService(ProjectRepository projectRepo,
-                             EnquiryService    enquirySvc,
-                             ApplicantService  applicantSvc) {   // ← new param
+    public HDBOfficerService(ProjectRepository projectRepo, ApplicantService  applicantSvc) { 
         this.projectRepo   = projectRepo;
-        this.enquirySvc    = enquirySvc;
-        this.applicantSvc  = applicantSvc;                       // ← store
+        this.applicantSvc  = applicantSvc;              
     }
 
     /* -------------------------------------------------------- */
@@ -87,27 +70,7 @@ public class HDBOfficerService {
     }
 
     /* -------------------------------------------------------- */
-    /*  2 – Enquiries                                           */
-    /* -------------------------------------------------------- */
-
-    public List<Enquiry> viewProjectEnquiries(HDBOfficer officer) {
-        List<Enquiry> all = enquirySvc.getAllEnquiries();
-        List<Enquiry> res = new ArrayList<>();
-        if (!officer.isHandlingProject()) return res;
-
-        String pid = officer.getHandlingProjectId();
-        for (Enquiry e : all)
-            if (e.getProjectName().equalsIgnoreCase(pid))
-                res.add(e);
-        return res;
-    }
-
-    public void replyToEnquiry(String enquiryId, String message) {
-        enquirySvc.replyToEnquiry(enquiryId, message);
-    }
-
-    /* -------------------------------------------------------- */
-    /*  3 – Flat booking duties                                 */
+    /*  2 – Flat booking duties                                 */
     /* -------------------------------------------------------- */
 
     public boolean bookFlat(String applicantNric, String flatType) {
