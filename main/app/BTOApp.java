@@ -12,10 +12,10 @@ public class BTOApp {
         Authenticator auth             = new Authenticator(fileManager);
 
         // 2) Services
-        ProjectService projectSvc = new ProjectService(fileManager);
+        ApplicantService applicantSvc = new ApplicantService();
+        ProjectService projectSvc = new ProjectService(fileManager, applicantSvc);
         HDBManagerService  managerSvc   = new HDBManagerService(projectSvc, fileManager);
         EnquiryService enquirySvc    = new EnquiryService();
-        ApplicantService applicantSvc = new ApplicantService();
         HDBOfficerService officerSvc = new HDBOfficerService(projectSvc, applicantSvc);
         RegistrationService registrationSvc = new RegistrationService(applicantSvc, projectSvc, fileManager);
 
@@ -35,7 +35,7 @@ public class BTOApp {
                     String role = user.getRole().toLowerCase();
                     Map<String, IUserHandler> roleHandlers = new HashMap<>();
                     roleHandlers.put("applicant", new ApplicantHandler(applicantSvc, enquirySvc, projectSvc));
-                    roleHandlers.put("hdb manager", new ManagerHandler(managerSvc, enquirySvc, registrationSvc));
+                    roleHandlers.put("hdb manager", new ManagerHandler(managerSvc, enquirySvc, registrationSvc, projectSvc));
                     roleHandlers.put("hdbofficer", new OfficerHandler(officerSvc, applicantSvc, enquirySvc, registrationSvc, projectSvc, auth, fileManager));
                     IUserHandler handler = roleHandlers.get(role);
                     if (handler != null) {

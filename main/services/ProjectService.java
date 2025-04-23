@@ -20,8 +20,10 @@ import main.util.FileManager;
 
 public class ProjectService {
     private static final List<BTOProject> projects = new ArrayList<>();
+    private final ApplicantService applicantSvc;
 
-    public ProjectService(FileManager fileManager){
+    public ProjectService(FileManager fileManager, ApplicantService applicantSvc){
+        this.applicantSvc = applicantSvc;
         try{
             Path path = Paths.get("data", "ProjectList.txt");
             List<String> lines = Files.readAllLines(path).stream()
@@ -73,10 +75,8 @@ public class ProjectService {
                                                 .filter(s -> !s.isEmpty())
                                                 .toList();
 
-                BTOProject project = new BTOProject(
-                    manager, projName, neighborhood, sd, ed,
-                    List.of(t1, t2), u1, u2, maxOfficers, officerList
-                );
+                List<Flat> flats = List.of(new TwoRoom(u1, 0), new ThreeRoom(u2, 0));
+                BTOProject project = new BTOProject(manager, projName, neighborhood, sd, ed,flats, maxOfficers, officerList);
 
                 projects.add(project);
                 manager.addProject(project);
@@ -104,5 +104,11 @@ public class ProjectService {
             if (p.getProjectName().equalsIgnoreCase(name))
                 return p;
         return null;
+    }
+
+    public List<Application> getApplicationByProject(BTOProject projectName){
+        return applicantSvc.getAllApplication().stream()
+            .filter(app -> app.getProjectName().equalsIgnoreCase(projectName.getProjectName()))
+            .collect(Collectors.toList());
     }
 }

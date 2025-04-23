@@ -18,8 +18,7 @@ public class HDBManagerService {
         this.fileManager = fileManager;
     }
 
-    public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate,
-        Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits) {    
+    public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) {    
         List<BTOProject> managerProjects = viewOwnProjects(manager);
         
         // Check if manager has any projects with visibility ON and application deadline not passed
@@ -36,7 +35,8 @@ public class HDBManagerService {
         }
     
         // Create and save the project as before
-        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
+        List<Flat> flats = List.of(new TwoRoom(twoRoomUnits, 0), new ThreeRoom(threeRoomUnits, 0));
+        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flats, 10, new ArrayList<>());       
         projectSvc.addProject(newProject);
         manager.addProject(newProject);
     
@@ -52,7 +52,6 @@ public class HDBManagerService {
             neighborhood, 
             startDate, 
             endDate, 
-            flatTypes, 
             twoRoomUnits, 
             threeRoomUnits,
             twoRoomPrice,
@@ -85,20 +84,13 @@ public class HDBManagerService {
     }
 
     public void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
-        if (project.getManagerNRIC().equals(manager.getNRIC())) {
+        if (project.getManager().getNRIC().equals(manager.getNRIC())) {
             project.setVisibility(visibility);
         }
     }
 
-    public void editBTOProject(HDBManager manager,
-                              BTOProject project,
-                              String newName,
-                              String newNeighborhood,
-                              Date newStartDate,
-                              Date newEndDate,
-                              List<String> flatTypes,
-                              int newTwoRoomUnits,
-                              int newThreeRoomUnits) {
+    public void editBTOProject(HDBManager manager, BTOProject project, String newName, String newNeighborhood,
+        Date newStartDate, Date newEndDate, int newTwoRoomUnits, int newThreeRoomUnits) {
         
         // Store original project name before updating (in case it changes)
         String originalName = project.getProjectName();
@@ -108,9 +100,8 @@ public class HDBManagerService {
         project.setNeighborhood(newNeighborhood);
         project.setStartDate(newStartDate);
         project.setEndDate(newEndDate);
-        project.setFlatTypes(new ArrayList<>(flatTypes));
-        project.setTwoRoomUnitsAvailable(newTwoRoomUnits);
-        project.setThreeRoomUnitsAvailable(newThreeRoomUnits);
+        project.setUnits("2-room",newTwoRoomUnits);
+        project.setUnits("3-room",newThreeRoomUnits);
         
         // Update the project file
         try {
@@ -217,7 +208,7 @@ public class HDBManagerService {
     public void bookingReport(HDBManager manager, String filter) {
         List<BTOProject> all = manager.getProjects();
         for (BTOProject project : all) {
-            for (Application application : project.getApplications()) {
+            for (Application application : projectSvc.getApplicationByProject(project)) {
                 if ("Booked".equalsIgnoreCase(application.getStatus())
                     && filter.equalsIgnoreCase(application.getFlatType())) {
                     System.out.println("Applicant: " + application.getApplicant().getNRIC()
@@ -233,30 +224,30 @@ public class HDBManagerService {
         return assignedOfficer == null ? assignedOfficer: new ArrayList<>();
     }
   
-    public boolean assignOfficerToProject(HDBManager manager, BTOProject project, String officerNRIC) {
-        if (project.getManagerNRIC().equals(manager.getNRIC())) {
-            project.addAssignedOfficer(officerNRIC);
+    public boolean assignOfficerToProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
+        if (project.getManager().getNRIC().equals(manager.getNRIC())) {
+            project.addOfficer(officer);
             
             // Need to get officer name to match the format in the file
-            String officerName = getOfficerNameByNRIC(officerNRIC);
+            String officerName = getOfficerNameByNRIC(officer.getNRIC());
             
             // Update the project file with the new officer assignment
-            fileManager.updateProjectOfficer(project.getProjectName(), officerNRIC, officerName, true);
+            fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officerName, true);
             
             return true;
         }
         return false;
     }
 
-    public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, String officerNRIC) {
+    public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (project.getManager().equals(manager)) {
-            project.removeAssignedOfficer(officerNRIC);
+            project.removeOfficer(officer);
             
             // Need to get officer name to match the format in the file
-            String officerName = getOfficerNameByNRIC(officerNRIC);
+            String officerName = getOfficerNameByNRIC(officer.getNRIC());
             
             // Update the project file to remove the officer
-            fileManager.updateProjectOfficer(project.getProjectName(), officerNRIC, officerName, false);
+            fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officerName, false);
             
             return true;
         }

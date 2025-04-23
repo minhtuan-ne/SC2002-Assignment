@@ -27,7 +27,7 @@ public class HDBOfficerService {
         BTOProject proj = projectSvc.getProjectByName(app.getProjectName());
         if (proj == null) { System.out.println("Project not found."); return false; }
 
-        if (!proj.decrementFlatCount(flatType)) {
+        if (!decrementFlatCount(proj, flatType)) {
             System.out.println("No remaining units of " + flatType);
             return false;
         }
@@ -58,6 +58,13 @@ public class HDBOfficerService {
         System.out.printf("Project     : %s (%s)%n", p.getProjectName(), p.getNeighborhood());
         System.out.printf("Flat Type   : %s%n", a.getFlatType());
         System.out.println("================================\n");
+    }
+
+    private boolean decrementFlatCount(BTOProject project, String type) {
+        int remain = project.getUnits(type);
+        if (remain <= 0) return false;
+        project.setUnits(type, remain - 1);   // create setUnits(..) if missing
+        return true;
     }
 }
 

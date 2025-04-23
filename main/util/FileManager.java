@@ -157,7 +157,7 @@ public class FileManager {
     }
  
     public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
-                            Date startDate, Date endDate, List<String> flatTypes,
+                            Date startDate, Date endDate,
                             int twoRoomUnits, int threeRoomUnits, 
                             int twoRoomPrice, int threeRoomPrice, int maxOfficers) {
         try {
@@ -332,6 +332,7 @@ public class FileManager {
             return false;
         }
     }
+
     public boolean updateProject(String projectName, String newProjectName, String neighborhood, 
         Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");

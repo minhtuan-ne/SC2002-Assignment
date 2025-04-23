@@ -144,7 +144,7 @@ public class OfficerHandler implements IUserHandler{
                 
                     // 2) collect all applications for that project in SUCCESSFUL state
                     List<Application> successApps = new ArrayList<>();
-                    for (Application a : myProject.getApplications()) {
+                    for (Application a : projectSvc.getApplicationByProject(myProject)) {
                         if ("Successful".equalsIgnoreCase(a.getStatus())) {
                             successApps.add(a);
                         }

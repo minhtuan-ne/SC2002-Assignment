@@ -8,22 +8,24 @@ import main.models.*;
 import main.services.*;
 
 public class ManagerHandler implements IUserHandler {
-    private final HDBManagerService managerService;
-    private final EnquiryService enquiryService;
-    private final RegistrationService registrationService;
+    private final HDBManagerService managerSvc;
+    private final EnquiryService enquirySvc;
+    private final RegistrationService registrationSvc;
+    private final ProjectService projectSvc;
 
-    public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService) {
-        this.managerService = managerService;
-        this.enquiryService = enquiryService;
-        this.registrationService = registrationService;
+    public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService, ProjectService projectService) {
+        this.managerSvc = managerService;
+        this.enquirySvc = enquiryService;
+        this.registrationSvc = registrationService;
+        this.projectSvc = projectService;
     }
 
     @Override
     public void run(User user, Scanner sc) {
-        runManagerLoop((HDBManager) user, managerService, registrationService, sc, enquiryService);
+        runManagerLoop((HDBManager) user, sc);
     }
-
-    public void runManagerLoop(HDBManager me, HDBManagerService svc, RegistrationService rsvc, Scanner sc, EnquiryService iesvc) {
+    //public void runManagerLoop(HDBManager me, HDBManagerService svc, RegistrationService rsvc, ApplicantService asvc, Scanner sc, EnquiryService iesvc) {
+    public void runManagerLoop(HDBManager me, Scanner sc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");
             System.out.println("1) Create project");
@@ -61,16 +63,12 @@ public class ManagerHandler implements IUserHandler {
                         Date startDate = Date.from(LocalDate.parse(startDateStr, fmt)
                                         .atStartOfDay(ZoneId.systemDefault()).toInstant());
                         Date endDate = Date.from(LocalDate.parse(endDateStr, fmt)
-                                     .atStartOfDay(ZoneId.systemDefault()).toInstant());
-                        
+                                     .atStartOfDay(ZoneId.systemDefault()).toInstant());                        
                         System.out.print("Number of 2-room units: ");
                         int twoRoomUnits = Integer.parseInt(sc.nextLine());
                         System.out.print("Number of 3-room units: ");
                         int threeRoomUnits = Integer.parseInt(sc.nextLine());
-                        
-                        List<String> flatTypes = List.of("2-room", "3-room");
-                        boolean success = svc.createProject(me, name, neighborhood, startDate, 
-                                             endDate, flatTypes, twoRoomUnits, threeRoomUnits);
+                        boolean success = managerSvc.createProject(me, name, neighborhood, startDate, endDate, twoRoomUnits, threeRoomUnits);
                         
                         if (success) {
                             System.out.println("Project created successfully.");
@@ -84,7 +82,7 @@ public class ManagerHandler implements IUserHandler {
                 }
                 
                 case "2": { // View all projects
-                    List<BTOProject> allProjects = svc.viewAllProjects();
+                    List<BTOProject> allProjects = managerSvc.viewAllProjects();
                     System.out.println("\n====== All Projects ======");
                     if (allProjects.isEmpty()) {
                         System.out.println("No projects found.");
@@ -101,14 +99,14 @@ public class ManagerHandler implements IUserHandler {
                             System.out.printf("  Period: %s to %s, Visible: %s%n", 
                                 start, end, p.isVisible() ? "Yes" : "No");
                             System.out.printf("  Units - 2-room: %d, 3-room: %d%n", 
-                                p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
+                                p.getUnits("2-room"), p.getUnits("3-room"));
                         }
                     }
                     break;
                 }
                 
                 case "3": { // View my projects
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     System.out.println("\n====== My Projects ======");
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects.");
@@ -125,14 +123,14 @@ public class ManagerHandler implements IUserHandler {
                             System.out.printf("   Period: %s to %s, Visible: %s%n", 
                                 start, end, p.isVisible() ? "Yes" : "No");
                             System.out.printf("   Units - 2-room: %d, 3-room: %d%n", 
-                                p.getTwoRoomUnitsAvailable(), p.getThreeRoomUnitsAvailable());
+                                p.getUnits("2-room"), p.getUnits("3-room"));
                         }
                     }
                     break;
                 }
                 
                 case "4": { // Edit project
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to edit.");
                         break;
@@ -183,22 +181,21 @@ public class ManagerHandler implements IUserHandler {
                     
                     System.out.print("New 2-room units (press Enter to keep current): ");
                     String twoRoomStr = sc.nextLine();
-                    int twoRoomUnits = selected.getTwoRoomUnitsAvailable();
+                    int twoRoomUnits = selected.getUnits("2-room");
                     if (!twoRoomStr.isEmpty()) twoRoomUnits = Integer.parseInt(twoRoomStr);
                     
                     System.out.print("New 3-room units (press Enter to keep current): ");
                     String threeRoomStr = sc.nextLine();
-                    int threeRoomUnits = selected.getThreeRoomUnitsAvailable();
+                    int threeRoomUnits = selected.getUnits("3-room");
                     if (!threeRoomStr.isEmpty()) threeRoomUnits = Integer.parseInt(threeRoomStr);
                     
-                    svc.editBTOProject(me, selected, name, neighborhood, startDate, endDate, 
-                                      List.of("2-room", "3-room"), twoRoomUnits, threeRoomUnits);
+                    managerSvc.editBTOProject(me, selected, name, neighborhood, startDate, endDate, twoRoomUnits, threeRoomUnits);
                     System.out.println("Project updated successfully.");
                     break;
                 }
                 
                 case "5": { // Delete project
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to delete.");
                         break;
@@ -220,7 +217,7 @@ public class ManagerHandler implements IUserHandler {
                     System.out.print("Are you sure you want to delete this project? (y/n): ");
                     String confirm = sc.nextLine().toLowerCase();
                     if (confirm.equals("y")) {
-                        svc.deleteBTOProject(me, selected);
+                        managerSvc.deleteBTOProject(me, selected);
                         System.out.println("Project deleted successfully.");
                     } else {
                         System.out.println("Deletion cancelled.");
@@ -229,7 +226,7 @@ public class ManagerHandler implements IUserHandler {
                 }
                 
                 case "6": { // Toggle project visibility
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to toggle visibility.");
                         break;
@@ -251,13 +248,13 @@ public class ManagerHandler implements IUserHandler {
                     
                     BTOProject selected = myProjects.get(projChoice - 1);
                     boolean newVisibility = !selected.isVisible();
-                    svc.toggleVisibility(me, selected, newVisibility);
+                    managerSvc.toggleVisibility(me, selected, newVisibility);
                     System.out.printf("Project is now %s.%n", newVisibility ? "visible" : "hidden");
                     break;
                 }
 
                 case "7": {
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects.");
                         break;
@@ -267,7 +264,7 @@ public class ManagerHandler implements IUserHandler {
                         System.out.println("\nProject: " + project.getProjectName());
                         System.out.println("Assigned Officers:");
 
-                        List<HDBOfficer> assigned = project.getHDBOfficers();
+                        List<HDBOfficer> assigned = project.getOfficers();
                         if (assigned.isEmpty()) {
                             System.out.println("  (none)");
                         } else {
@@ -277,7 +274,7 @@ public class ManagerHandler implements IUserHandler {
                         }
 
                         System.out.println("Pending Registrations:");
-                        List<Registration> pending = registrationService.getRegistration(); 
+                        List<Registration> pending = registrationSvc.getRegistration(); 
                         if (pending.isEmpty()) {
                             System.out.println("  (none)");
                         } else {
@@ -290,7 +287,7 @@ public class ManagerHandler implements IUserHandler {
                 }
 
                 case "8": {
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to manage.");
                         break;
@@ -309,7 +306,7 @@ public class ManagerHandler implements IUserHandler {
                     }
 
                     BTOProject project = myProjects.get(projChoice - 1);
-                    List<Registration> pending = registrationService.getRegistration();
+                    List<Registration> pending = registrationSvc.getRegistration();
 
                     if (pending.isEmpty()) {
                         System.out.println("No pending officer registrations.");
@@ -334,7 +331,7 @@ public class ManagerHandler implements IUserHandler {
                     }
 
                     HDBOfficer selectedOfficer = pending.get(officerChoice - 1).getOfficer();
-                    boolean success = rsvc.handleOfficerRegistration(me, project, selectedOfficer);
+                    boolean success = registrationSvc.handleOfficerRegistration(me, project, selectedOfficer);
                     if (success) {
                         System.out.println("Officer approved successfully.");
                     } else {
@@ -344,7 +341,7 @@ public class ManagerHandler implements IUserHandler {
                 }
                 
                 case "9": { // Process BTO application
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to process applications for.");
                         break;
@@ -365,7 +362,7 @@ public class ManagerHandler implements IUserHandler {
                     BTOProject selected = myProjects.get(projChoice - 1);
                     
                     // Show existing applications for this project
-                    List<Application> existingApps = selected.getApplications();
+                    List<Application> existingApps = projectSvc.getApplicationByProject(selected);
                     System.out.println("\n===== Pending Applications =====");
                     if (existingApps.isEmpty()) {
                         System.out.println("No applications found for this project.");
@@ -412,7 +409,7 @@ public class ManagerHandler implements IUserHandler {
                         int choice9 = Integer.parseInt(sc.nextLine());
                         
                         boolean approve = (choice9 == 1);
-                        boolean success = svc.handleBTOApplication(me, applicationToProcess, approve);
+                        boolean success = managerSvc.handleBTOApplication(me, applicationToProcess, approve);
                         
                         if (success) {
                             if (approve) {
@@ -433,7 +430,7 @@ public class ManagerHandler implements IUserHandler {
 
                 // Case 10: Process withdrawal request - Already works, just minor improvements
                 case "10": { // Process withdrawal request
-                    List<BTOProject> myProjects = svc.viewOwnProjects(me);
+                    List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to process withdrawal requests for.");
                         break;
@@ -452,9 +449,9 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     BTOProject selected = myProjects.get(projChoice - 1);
-                    
+
                     // Get applications from the project
-                    List<Application> applications = selected.getApplications();
+                    List<Application> applications =  projectSvc.getApplicationByProject(selected);
                     
                     // Display existing applications
                     System.out.println("\n===== Current Applications =====");
@@ -499,7 +496,7 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     // Process the withdrawal
-                    svc.handleWithdrawal(me, foundApp);
+                    managerSvc.handleWithdrawal(me, foundApp);
                     System.out.println("Withdrawal processed successfully.");
                     break;
                 }
@@ -514,7 +511,7 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     System.out.println("\n===== Booking Report - " + filter + " =====");
-                    svc.bookingReport(me, filter);
+                    managerSvc.bookingReport(me, filter);
                     break;
                 }
                 
@@ -522,7 +519,7 @@ public class ManagerHandler implements IUserHandler {
                     System.out.println("\n===== All Enquiries =====");
                     
                     // Use the same enquiryService that was declared in main()
-                    List<Enquiry> allEnquiries = iesvc.getAllEnquiries();
+                    List<Enquiry> allEnquiries = enquirySvc.getAllEnquiries();
                     
                     if (allEnquiries.isEmpty()) {
                         System.out.println("No enquiries found.");
@@ -540,7 +537,7 @@ public class ManagerHandler implements IUserHandler {
                 case "13": { // Reply to enquiry
                     System.out.println("\n===== All Enquiries =====");
                     
-                    List<Enquiry> allEnquiries = iesvc.getAllEnquiries();
+                    List<Enquiry> allEnquiries = enquirySvc.getAllEnquiries();
                     
                     if (allEnquiries.isEmpty()) {
                         System.out.println("No enquiries to reply to.");
@@ -568,7 +565,7 @@ public class ManagerHandler implements IUserHandler {
                     System.out.print("Reply message: ");
                     String reply = sc.nextLine();
                     
-                    iesvc.replyToEnquiry(selected.getEnquiryId(), reply);
+                    enquirySvc.replyToEnquiry(selected.getEnquiryId(), reply);
                     break;
                 }
                 case "14": {

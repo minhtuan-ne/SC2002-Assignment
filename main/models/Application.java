@@ -1,9 +1,9 @@
 package main.models;
 
 public class Application {
-    private Applicant applicant;
-    private String projectName;
-    private String flatType;
+    private final Applicant applicant;
+    private final String projectName;
+    private final String flatType;
     private String status; // Pending, Successful, Unsuccessful, Booked
 
     public Application(Applicant applicant, String projectName, String flatType) {

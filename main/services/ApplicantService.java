@@ -54,7 +54,6 @@ public class ApplicantService{
         // passed all checks:
         Application application = new Application(applicant, project.getProjectName(), flatType);
         applications.add(application);
-        project.addApplication(application);
         System.out.println("Application submitted successfully.");
         return true;
     }
@@ -66,6 +65,10 @@ public class ApplicantService{
             }
         }
         return false;
+    }
+
+    public List<Application> getAllApplication(){
+        return applications;
     }
 
     public Application getApplication(String nric) {

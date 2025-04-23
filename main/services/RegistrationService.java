@@ -31,12 +31,11 @@ public class RegistrationService {
         // If officer is handling a project, check if it's expired
         if (officer.isHandlingProject()) {
             BTOProject current = projectSvc.getProjectByName(officer.getHandlingProjectId());
-
             if (current != null && new Date().after(current.getEndDate())) {
                 // Auto-clear expired project
                 officer.setHandlingProjectId(null);
                 officer.setRegStatus(HDBOfficer.RegistrationStatus.NONE);
-                current.removeAssignedOfficer(officer.getNRIC());
+                current.removeOfficer(officer);
                 System.out.println("Previous project has ended. Status reset – you may now register.");
             } else {
                 System.out.println("You are still handling an ongoing project. Cannot register.");
@@ -81,7 +80,7 @@ public class RegistrationService {
             return false;
         }
 
-        if (project.getHDBOfficers().size() >= project.getMaxOfficers()) {
+        if (project.getOfficers().size() >= project.getMaxOfficers()) {
             System.out.println("Project has reached max officer capacity.");
             return false;
         }
@@ -94,7 +93,7 @@ public class RegistrationService {
         // Update the project file with the new officer assignment
         fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officer.getName(), true);
         registrations.removeIf(r -> r.getOfficer().getNRIC().equalsIgnoreCase(officer.getNRIC()));
-        project.getHDBOfficers().add(officer);         
+        project.addOfficer(officer);
         System.out.println("Officer registration approved.");
         return true;
     }
