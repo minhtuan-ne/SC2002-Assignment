@@ -7,21 +7,21 @@ import main.services.*;
 
 public class ApplicantHandler implements IUserHandler {
     private final ApplicantService applicantSvc;
-    private final IEnquiryService enquirySvc;
-    private final List<BTOProject> allProjects;
+    private final EnquiryService enquirySvc;
+    private final ProjectService projectSvc;
 
-    public ApplicantHandler(ApplicantService applicantSvc, IEnquiryService enquirySvc, List<BTOProject> allProjects) {
+    public ApplicantHandler(ApplicantService applicantSvc, EnquiryService enquirySvc, ProjectService projectSvc) {
         this.applicantSvc = applicantSvc;
         this.enquirySvc = enquirySvc;
-        this.allProjects = allProjects;
+        this.projectSvc = projectSvc;
     }
 
     @Override
     public void run(User user, Scanner sc) {
-        runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, allProjects, sc);
+        runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, projectSvc, sc);
     }
 
-    public static void runApplicantLoop(Applicant me, ApplicantService svc, IEnquiryService esvc, List<BTOProject> projects, Scanner sc) {
+    public static void runApplicantLoop(Applicant me, ApplicantService svc, EnquiryService esvc, ProjectService psvc, Scanner sc) {
         while (true) {
             System.out.println("\n-- Applicant Menu --");
             System.out.println("1) View available projects");
@@ -41,7 +41,7 @@ public class ApplicantHandler implements IUserHandler {
                 case "1": {
                     System.out.println("\n====== Available Projects ======");
                     // only list those visible *and* whose dates include today
-                    List<BTOProject> available = svc.viewAvailableProjects(me, projects);
+                    List<BTOProject> available = svc.viewAvailableProjects(me, psvc.getAllProjects());
                     if (available.isEmpty()) {
                         System.out.println("No projects are accepting applications right now.");
                     } else {
@@ -69,7 +69,7 @@ public class ApplicantHandler implements IUserHandler {
                 }
                 case "2": {
                     // 1) get only those projects currently open & visible
-                    List<BTOProject> available = svc.viewAvailableProjects(me, projects);
+                    List<BTOProject> available = svc.viewAvailableProjects(me, psvc.getAllProjects());
                     if (available.isEmpty()) {
                         System.out.println("No projects available to apply for at the moment.");
                         break;
@@ -115,14 +115,14 @@ public class ApplicantHandler implements IUserHandler {
                     break;
                 }
                 case "3":
-                    svc.viewAppliedProject(me, projects);
+                    svc.viewAppliedProject(me, psvc.getAllProjects());
                     break;
                 case "4":
                     svc.requestWithdrawal(me);
                     break;
                 case "5": {
                     // 1) get only those projects currently open & visible
-                    List<BTOProject> available = svc.viewAvailableProjects(me, projects);
+                    List<BTOProject> available = svc.viewAvailableProjects(me, psvc.getAllProjects());
                     if (available.isEmpty()) {
                         System.out.println("No projects available to submit an enquiry at the moment.");
                         break;

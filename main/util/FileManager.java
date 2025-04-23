@@ -1,7 +1,9 @@
 package main.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -9,14 +11,10 @@ import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.io.BufferedReader;
 import java.util.stream.Collectors;
-import java.io.FileReader;
-
 import main.models.HDBOfficer;
 
-public class FileManager implements IFileManager {
-    @Override
+public class FileManager {
     public List<List<String>> readFile(String fileName) {
         List<List<String>> fileList = new ArrayList<>();
         try {
@@ -71,7 +69,6 @@ public class FileManager implements IFileManager {
         return fileList;
     }
 
-    @Override
     public Map<String, List<List<String>>> getDatabyRole() {
         Map<String, List<List<String>>> dataMap = new HashMap<>();
         dataMap.put("Applicant", readFile("ApplicantList.txt"));
@@ -81,7 +78,6 @@ public class FileManager implements IFileManager {
         return dataMap;
     }
 
-    @Override
     public void updatePassword(String role, String nric, String newPassword) throws IOException {
         // map role → filename
         String fileName = switch(role.toLowerCase()) {
@@ -336,14 +332,8 @@ public class FileManager implements IFileManager {
             return false;
         }
     }
-    @Override
-    public boolean updateProject(String projectName, 
-                               String newProjectName, 
-                               String neighborhood, 
-                               Date startDate, 
-                               Date endDate, 
-                               int twoRoomUnits, 
-                               int threeRoomUnits) throws IOException {
+    public boolean updateProject(String projectName, String newProjectName, String neighborhood, 
+        Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");
         if (!Files.exists(path)) {
             System.out.println("Project file not found at: " + path.toAbsolutePath());
@@ -420,7 +410,6 @@ public class FileManager implements IFileManager {
         return true;
     }
     
-    @Override
     public boolean deleteProjectFromFile(String projectName) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");
         if (!Files.exists(path)) {

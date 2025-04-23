@@ -1,20 +1,19 @@
 package main.services;
 
-import main.models.Applicant;
-import main.models.Enquiry;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.UUID;
+import main.models.Applicant;
+import main.models.Enquiry;
 
-public class EnquiryService implements IEnquiryService {
+public class EnquiryService {
     private final List<Enquiry> enquiries;
 
     public EnquiryService() {
         this.enquiries = new ArrayList<>();
     }
 
-    @Override
     public void submitEnquiry(Applicant applicant, String projectName, String message) {
         String fullId  = UUID.randomUUID().toString();
         String shortId = fullId.substring(0, 8);
@@ -23,7 +22,6 @@ public class EnquiryService implements IEnquiryService {
         System.out.println("Enquiry submitted successfully with ID: " + shortId);
     }
 
-    @Override
     public List<Enquiry> getApplicantEnquiries(Applicant applicant) {
         List<Enquiry> result = new ArrayList<>();
         for (Enquiry e : enquiries) {
@@ -34,7 +32,6 @@ public class EnquiryService implements IEnquiryService {
         return result;
     }
 
-    @Override
     public boolean deleteEnquiry(Applicant applicant, String enquiryId) {
         Iterator<Enquiry> iter = enquiries.iterator();
         while (iter.hasNext()) {
@@ -50,7 +47,6 @@ public class EnquiryService implements IEnquiryService {
         return false;
     }
 
-    @Override
     public boolean editEnquiry(Applicant applicant, String enquiryId, String newMessage) {
         for (Enquiry e : enquiries) {
             if (e.getEnquiryId().equals(enquiryId) 
@@ -64,13 +60,11 @@ public class EnquiryService implements IEnquiryService {
         return false;
     }
 
-    @Override
     public List<Enquiry> getAllEnquiries() {
         // return a copy so callers can’t mutate our internal list
         return new ArrayList<>(enquiries);
     }
 
-    @Override
     public void replyToEnquiry(String enquiryId, String message) {
         for (Enquiry e : enquiries) {
             if (e.getEnquiryId().equals(enquiryId)) {

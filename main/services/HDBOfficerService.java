@@ -1,77 +1,20 @@
 package main.services;
 
-import java.util.Date;
 import main.models.*;
-import main.repositories.ProjectRepository;
 
 public class HDBOfficerService {
-    private final ProjectRepository projectRepo;
     private final ApplicantService applicantSvc;
+    private final ProjectService projectSvc;
 
-    public HDBOfficerService(ProjectRepository projectRepo, ApplicantService  applicantSvc) { 
-        this.projectRepo   = projectRepo;
+    public HDBOfficerService(ProjectService projectSvc, ApplicantService  applicantSvc) { 
+        this.projectSvc = projectSvc;
         this.applicantSvc  = applicantSvc;              
     }
 
-    /* -------------------------------------------------------- */
-    /*  1 – Registration workflow                               */
-    /* -------------------------------------------------------- */
-
-    public boolean registerToHandleProject(HDBOfficer officer, String projectId) {
-        // Find the target project
-        BTOProject project = findProject(projectId);
-        if (project == null) {
-            System.out.println("Project not found.");
-            return false;
-        }
-
-        // If officer is handling a project, check if it's expired
-        if (officer.isHandlingProject()) {
-            BTOProject current = findProject(officer.getHandlingProjectId());
-
-            if (current != null && new Date().after(current.getEndDate())) {
-                // Auto-clear expired project
-                officer.cancelRegistration();
-                current.removeAssignedOfficer(officer.getNRIC());
-                System.out.println("Previous project has ended. Status reset – you may now register.");
-            } else {
-                System.out.println("You are still handling an ongoing project. Cannot register.");
-                return false;
-            }
-        }
-
-        // Check if officer has applied for this project
-        Application app = applicantSvc.getApplication(officer.getNRIC());
-        if (app != null && app.getProjectName().equalsIgnoreCase(projectId)) {
-            System.out.println("You have already applied for this project as an applicant – cannot register as officer.");
-            return false;
-        }
-
-        // All checks passed – submit request
-        officer.submitRegistration(projectId);
-        project.addPendingRegistration(officer);
-        System.out.println("Request submitted – awaiting manager approval.");
-        return true;
-    }
-
-    public void cancelRegistration(HDBOfficer officer) {
-        if (officer.getRegStatus() == HDBOfficer.RegistrationStatus.NONE) {
-            System.out.println("No active request / assignment to cancel.");
-        } else {
-            officer.cancelRegistration();
-            System.out.println("Registration removed.");
-        }
-    }
-
-    /* Read‑only helpers */
     public String getRegistrationStatus(HDBOfficer o){ return o.getRegStatus().name(); }
     public BTOProject viewHandledProject(HDBOfficer o){
-        return o.isHandlingProject() ? findProject(o.getHandlingProjectId()) : null;
+        return o.isHandlingProject() ? projectSvc.getProjectByName(o.getHandlingProjectId()) : null;
     }
-
-    /* -------------------------------------------------------- */
-    /*  2 – Flat booking duties                                 */
-    /* -------------------------------------------------------- */
 
     public boolean bookFlat(String applicantNric, String flatType) {
 
@@ -81,7 +24,7 @@ public class HDBOfficerService {
             return false;
         }
 
-        BTOProject proj = findProject(app.getProjectName());
+        BTOProject proj = projectSvc.getProjectByName(app.getProjectName());
         if (proj == null) { System.out.println("Project not found."); return false; }
 
         if (!proj.decrementFlatCount(flatType)) {
@@ -107,7 +50,7 @@ public class HDBOfficerService {
         }
 
         Applicant  a = app.getApplicant();
-        BTOProject p = findProject(app.getProjectName());
+        BTOProject p = projectSvc.getProjectByName(app.getProjectName());
 
         System.out.println("\n======= BOOKING RECEIPT =======");
         System.out.printf("Name / NRIC : %s / %s%n", a.getName(), a.getNRIC());
@@ -115,17 +58,6 @@ public class HDBOfficerService {
         System.out.printf("Project     : %s (%s)%n", p.getProjectName(), p.getNeighborhood());
         System.out.printf("Flat Type   : %s%n", a.getFlatType());
         System.out.println("================================\n");
-    }
-
-    /* -------------------------------------------------------- */
-    /*  Helper                                                  */
-    /* -------------------------------------------------------- */
-
-    private BTOProject findProject(String name) {
-        for (BTOProject p : projectRepo.getAllProjects())
-            if (p.getProjectName().equalsIgnoreCase(name))
-                return p;
-        return null;
     }
 }
 

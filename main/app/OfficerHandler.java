@@ -3,49 +3,44 @@ package main.app;
 import java.util.*;
 import java.util.stream.Collectors;
 import main.models.*;
-import main.repositories.IProjectRepository;
 import main.services.*;
 import main.util.*;
 
 public class OfficerHandler implements IUserHandler{
-    private final HDBOfficerService officerService;
-    private final ApplicantService applicantService;
-    private final IEnquiryService enquiryService;
-    private final IProjectRepository projectRepo;
+    private final HDBOfficerService officerSvc;
+    private final ApplicantService applicantSvc;
+    private final EnquiryService enquirySvc;
+    private final RegistrationService registrationService;
+    private final ProjectService projectSvc;
     private final Authenticator auth;
-    private final IFileManager fileManager;
+    private final FileManager fileManager;
         
     public OfficerHandler(
             HDBOfficerService officerService,
             ApplicantService applicantService,
-            IEnquiryService enquiryService,
-            IProjectRepository projectRepo,
+            EnquiryService enquiryService,
+            RegistrationService registrationService,
+            ProjectService projectService,
             Authenticator auth,
-            IFileManager fileManager
+            FileManager fileManager            
             ) {
-        this.officerService = officerService;
-        this.applicantService = applicantService;
-        this.enquiryService = enquiryService;
-        this.projectRepo = projectRepo;
+        this.officerSvc = officerService;
+        this.applicantSvc = applicantService;
+        this.enquirySvc = enquiryService;
+        this.projectSvc = projectService;
         this.auth = auth;
         this.fileManager = fileManager;
+        this.registrationService = registrationService;
     }
-
 
     @Override
     public void run(User user, Scanner sc) {
-        runOfficerLoop((HDBOfficer) user,
-            officerService,
-            applicantService,
-            enquiryService,
-            projectRepo.getAllProjects(),
-            sc,
-            auth,
-            fileManager);
+        runOfficerLoop((HDBOfficer) user, officerSvc, applicantSvc, projectSvc, enquirySvc, registrationService,
+            projectSvc.getAllProjects(), sc, auth, fileManager);
     }
 
-    public static void runOfficerLoop(HDBOfficer me, HDBOfficerService svc, ApplicantService applicantSvc,
-        IEnquiryService enquirySvc, List<BTOProject> projects, Scanner sc, Authenticator auth, IFileManager fileManager) {
+    public static void runOfficerLoop(HDBOfficer me, HDBOfficerService svc, ApplicantService applicantSvc, ProjectService projectSvc, EnquiryService enquirySvc,
+        RegistrationService registrationSvc, List<BTOProject> projects, Scanner sc, Authenticator auth, FileManager fileManager) {
         while (true) {
 
             // header
@@ -83,12 +78,12 @@ public class OfficerHandler implements IUserHandler{
                     }
 
                     // Continue registration only if user said "no"
-                    svc.registerToHandleProject(me, pid);
+                    registrationSvc.register(me, pid);
                     break;
                 }
 
                 case "2":
-                    svc.cancelRegistration(me);
+                    registrationSvc.cancelRegistration(me);
                     break;
 
                 case "3": {
@@ -205,7 +200,7 @@ public class OfficerHandler implements IUserHandler{
                 }
 
                 case "8":
-                    new ApplicantHandler(applicantSvc, enquirySvc, projects).run(me, sc);
+                    new ApplicantHandler(applicantSvc, enquirySvc, projectSvc).run(me, sc);
                     break;
 
                 case "9": {

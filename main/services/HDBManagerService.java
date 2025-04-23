@@ -1,4 +1,3 @@
-// main/services/HDBManagerService.java
 package main.services;
 
 import java.io.IOException;
@@ -7,35 +6,24 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 import main.models.*;
-import main.repositories.IProjectRepository;
-import main.util.IFileManager;
+import main.util.FileManager;
 
 public class HDBManagerService {
-    private final IFileManager fileManager;
-    private final IProjectRepository projectRepository;
-
+    private final FileManager fileManager;
+    private final ProjectService projectSvc;
     private List<String> assignedOfficer;
 
-    public HDBManagerService(IProjectRepository projectRepository, IFileManager fileManager) {
-        this.projectRepository = projectRepository;
+    public HDBManagerService(ProjectService projectSvc, FileManager fileManager) {
+        this.projectSvc = projectSvc;
         this.fileManager = fileManager;
     }
 
-    public boolean createProject(HDBManager manager,
-                                 String name,
-                                 String neighborhood,
-                                 Date startDate,
-                                 Date endDate,
-                                 List<String> flatTypes,
-                                 int twoRoomUnits,
-                                 int threeRoomUnits) {
-    
-        // Get all projects for this manager
+    public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate,
+        Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits) {    
         List<BTOProject> managerProjects = viewOwnProjects(manager);
         
         // Check if manager has any projects with visibility ON and application deadline not passed
         Date currentDate = new Date(); // Get current date
-        boolean hasActiveVisibleProject = false;
         
         for (BTOProject p : managerProjects) {
             System.out.println("Project: " + p.getProjectName() + ", Visible: " + p.isVisible() + 
@@ -43,15 +31,13 @@ public class HDBManagerService {
             
             if (p.isVisible() && !currentDate.after(p.getEndDate())) {
                 System.out.println("Project is visible and not expired");
-                hasActiveVisibleProject = true;
                 break;
             }
         }
     
-        
         // Create and save the project as before
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flatTypes, twoRoomUnits, threeRoomUnits, 10, new ArrayList<>());       
-        projectRepository.addProject(newProject);
+        projectSvc.addProject(newProject);
         manager.addProject(newProject);
     
         // Save project to file
@@ -78,15 +64,14 @@ public class HDBManagerService {
     }
 
     public List<BTOProject> viewAllProjects() {
-        return projectRepository.getAllProjects();
+        return projectSvc.getAllProjects();
     }
 
     public List<BTOProject> viewOwnProjects(HDBManager manager) {
-       
         List<BTOProject> ownProjects = manager.getProjects();
         
         if (ownProjects.isEmpty()) {
-            ownProjects = projectRepository.getAllProjects().stream()
+            ownProjects = projectSvc.getAllProjects().stream()
                 .filter(p -> p.getManager().getNRIC().equals(manager.getNRIC()))
                 .collect(Collectors.toList());
             
@@ -149,14 +134,12 @@ public class HDBManagerService {
     }
     
     public void deleteBTOProject(HDBManager manager, BTOProject project) {
-        
-        
         // Store project name before removing it
         String projectName = project.getProjectName();
         
         // Remove from memory
         manager.removeProject(project);
-        projectRepository.removeProject(project);
+        projectSvc.removeProject(project);
         
         // Remove from file
         try {
@@ -170,38 +153,12 @@ public class HDBManagerService {
         }
     }
 
-    public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
-        if (!project.getManager().getNRIC().equalsIgnoreCase(manager.getNRIC())) {
-            System.out.println("Wrong Manager.");
-            return false;
-        }
-
-        if (!officer.isRegistrationPending()
-                || !project.getProjectName().equalsIgnoreCase(officer.getHandlingProjectId())) {
-            System.out.println("No pending registration from this officer for this project.");
-            return false;
-        }
-
-        if (project.getHDBOfficers().size() >= project.getMaxOfficers()) {
-            System.out.println("Project has reached max officer capacity.");
-            return false;
-        }
-
-        officer.approveRegistration(project.getProjectName());
-        // Update the project file with the new officer assignment
-        fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officer.getName(), true);
-        project.removePendingRegistration(officer);    // ✅ remove from pending list
-        project.getHDBOfficers().add(officer);         // ✅ add to approved list
-        System.out.println("Officer registration approved.");
-        return true;
-    }
-
     public boolean handleBTOApplication(HDBManager manager, Application application, boolean approve) {
         String projectName = application.getProjectName();
         
         // Find the correct project
         BTOProject matchingProject = null;
-        for (BTOProject project : projectRepository.getAllProjects()) {
+        for (BTOProject project : projectSvc.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
                 matchingProject = project;
                 break;
@@ -241,7 +198,7 @@ public class HDBManagerService {
     
     public void handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
-        for (BTOProject project : projectRepository.getAllProjects()) {
+        for (BTOProject project : projectSvc.getAllProjects()) {
             if (project.getManager().equals(manager)
                 && project.getProjectName().equalsIgnoreCase(projectName)) {
 

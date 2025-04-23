@@ -5,26 +5,25 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import main.models.*;
-import main.repositories.IProjectRepository;
 import main.services.*;
 
 public class ManagerHandler implements IUserHandler {
     private final HDBManagerService managerService;
-    private final IProjectRepository projectRepo;
-    private final IEnquiryService enquiryService;
+    private final EnquiryService enquiryService;
+    private final RegistrationService registrationService;
 
-    public ManagerHandler(HDBManagerService managerService, IProjectRepository projectRepo, IEnquiryService enquiryService) {
+    public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService) {
         this.managerService = managerService;
-        this.projectRepo = projectRepo;
         this.enquiryService = enquiryService;
+        this.registrationService = registrationService;
     }
 
     @Override
     public void run(User user, Scanner sc) {
-        runManagerLoop((HDBManager) user, managerService, projectRepo, sc, enquiryService);
+        runManagerLoop((HDBManager) user, managerService, registrationService, sc, enquiryService);
     }
 
-    private static void runManagerLoop(HDBManager me, HDBManagerService svc, IProjectRepository repo, Scanner sc, IEnquiryService iesvc) {
+    public void runManagerLoop(HDBManager me, HDBManagerService svc, RegistrationService rsvc, Scanner sc, EnquiryService iesvc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");
             System.out.println("1) Create project");
@@ -278,12 +277,12 @@ public class ManagerHandler implements IUserHandler {
                         }
 
                         System.out.println("Pending Registrations:");
-                        List<HDBOfficer> pending = project.getPendingRegistrations();
+                        List<Registration> pending = registrationService.getRegistration(); 
                         if (pending.isEmpty()) {
                             System.out.println("  (none)");
                         } else {
-                            for (HDBOfficer o : pending) {
-                                System.out.printf("  - %s (NRIC: %s)\n", o.getName(), o.getNRIC());
+                            for (Registration o : pending) {
+                                System.out.printf("  - %s (NRIC: %s)\n", o.getOfficer().getName(), o.getOfficer().getNRIC());
                             }
                         }
                     }
@@ -310,7 +309,7 @@ public class ManagerHandler implements IUserHandler {
                     }
 
                     BTOProject project = myProjects.get(projChoice - 1);
-                    List<HDBOfficer> pending = project.getPendingRegistrations();
+                    List<Registration> pending = registrationService.getRegistration();
 
                     if (pending.isEmpty()) {
                         System.out.println("No pending officer registrations.");
@@ -319,8 +318,8 @@ public class ManagerHandler implements IUserHandler {
 
                     System.out.println("Pending officers:");
                     for (int i = 0; i < pending.size(); i++) {
-                        HDBOfficer o = pending.get(i);
-                        System.out.printf("%d) %s (NRIC: %s)\n", i + 1, o.getName(), o.getNRIC());
+                        Registration o = pending.get(i);
+                        System.out.printf("%d) %s (NRIC: %s)\n", i + 1, o.getOfficer().getName(), o.getOfficer().getNRIC());
                     }
 
                     System.out.print("Select officer to approve (0 to cancel): ");
@@ -334,8 +333,8 @@ public class ManagerHandler implements IUserHandler {
                         break;
                     }
 
-                    HDBOfficer selectedOfficer = pending.get(officerChoice - 1);
-                    boolean success = svc.handleOfficerRegistration(me, project, selectedOfficer);
+                    HDBOfficer selectedOfficer = pending.get(officerChoice - 1).getOfficer();
+                    boolean success = rsvc.handleOfficerRegistration(me, project, selectedOfficer);
                     if (success) {
                         System.out.println("Officer approved successfully.");
                     } else {

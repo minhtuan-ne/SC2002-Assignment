@@ -13,29 +13,6 @@ public class HDBOfficer extends Applicant {
         this.regStatus = RegistrationStatus.NONE;
     }
 
-    /* ---------------  Registration workflow  --------------- */
-
-    /** Officer submits request – state → PENDING               */
-    public void submitRegistration(String projectId) {
-        this.regStatus         = RegistrationStatus.PENDING;
-        this.handlingProjectId = projectId;
-    }
-
-    /** Manager approves – state → APPROVED                     */
-    public void approveRegistration(String projectId) {
-        if (!projectId.equalsIgnoreCase(this.handlingProjectId))
-            throw new IllegalStateException("Project mismatch during approval");
-        this.regStatus = RegistrationStatus.APPROVED;
-    }
-
-    /** Manager rejects OR officer cancels                      */
-    public void cancelRegistration() {
-        this.regStatus         = RegistrationStatus.NONE;
-        this.handlingProjectId = null;
-    }
-
-    /* ---------------  Convenience  --------------- */
-
     public boolean isRegistrationPending() { return regStatus == RegistrationStatus.PENDING; }
     public boolean isHandlingProject()     { return regStatus == RegistrationStatus.APPROVED; }
     public String  getHandlingProjectId()  { return handlingProjectId; }
@@ -46,7 +23,7 @@ public class HDBOfficer extends Applicant {
     @Override
     public String toString() {
         String s =
-                regStatus == RegistrationStatus.NONE     ? "None"
+                regStatus == RegistrationStatus.NONE ? "None"
                         : regStatus == RegistrationStatus.PENDING  ? "PENDING‑" + handlingProjectId
                         : handlingProjectId;
         return super.toString() + " | Handling: " + s;

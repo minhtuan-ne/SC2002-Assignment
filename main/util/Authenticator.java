@@ -1,18 +1,17 @@
 package main.util;
 
+import java.util.*;
 import main.models.Applicant;
 import main.models.HDBManager;
 import main.models.HDBOfficer;
 import main.models.User;
 
-import java.util.*;
-
 public class Authenticator {
-    private final IFileManager fileManager;
+    private final FileManager fileManager;
     private final Scanner sc;
     private List<User> users = new ArrayList<>();
 
-    public Authenticator(IFileManager fileManager) {
+    public Authenticator(FileManager fileManager) {
         this.fileManager = fileManager;
         this.sc = new Scanner(System.in);
     }

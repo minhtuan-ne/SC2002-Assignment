@@ -4,23 +4,19 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-
 public class BTOProject {
-    
-    private HDBManager manager;               // The manager who owns/created this project
+    private final HDBManager manager;               // The manager who owns/created this project
     private String projectName;               // Name of the BTO project
     private String neighborhood;              // E.g., Yishun, Boon Lay, etc.
     public Date startDate;                    // Application opening date
     public Date endDate;                      // Application closing date
     private List<String> flatTypes;           // ["2-room", "3-room"]
-    
     private int twoRoomUnitsAvailable;        // How many 2-room units are available
-    private int threeRoomUnitsAvailable;      // How many 3-room units are available
-    
+    private int threeRoomUnitsAvailable;      // How many 3-room units are available    
     private boolean visibility;               // Whether the project is visible to applicants
-    private int maxOfficers;                  // Max number of HDB officers that can handle this project
-    private List<HDBOfficer> HDBOfficers;// The officers assigned to handle
-    private List<Application> applications;
+    private final int maxOfficers;                  // Max number of HDB officers that can handle this project
+    private final List<HDBOfficer> HDBOfficers;     // The officers assigned to handle
+    private final List<Application> applications;
     private List<String> assignedOfficer;
 
     public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<String> flatTypes, int twoRoomUnits, int threeRoomUnits, int maxOfficers, List<String> assignedOfficer) {
@@ -39,68 +35,37 @@ public class BTOProject {
         this.assignedOfficer = assignedOfficer;
     }
     
-    public List<String> getAssignedOfficer() {
-        return assignedOfficer;
-    }
-    
-    public HDBManager getManager() {
-        return manager;
-    }
-    public String getManagerNRIC() {
-        return manager.getNRIC();
-    }
+    public List<String> getAssignedOfficer() { return assignedOfficer; }
 
-    public String getProjectName() {
-        return projectName;
-    }
+    public HDBManager getManager() { return manager; }
 
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
+    public String getManagerNRIC() { return manager.getNRIC(); }
 
-    public String getNeighborhood() {
-        return neighborhood;
-    }
+    public String getProjectName() { return projectName; }
 
-    public void setNeighborhood(String neighborhood) {
-        this.neighborhood = neighborhood;
-    }
+    public void setProjectName(String projectName) { this.projectName = projectName; }
 
-    public Date getStartDate() {
-        return startDate;
-    }
+    public String getNeighborhood() { return neighborhood; }
 
-    public void setStartDate(Date startDate) {
-        this.startDate = startDate;
-    }
+    public void setNeighborhood(String neighborhood) { this.neighborhood = neighborhood; }
 
-    public Date getEndDate() {
-        return endDate;
-    }
+    public Date getStartDate() { return startDate; }
 
-    public void setEndDate(Date endDate) {
-        this.endDate = endDate;
-    }
+    public void setStartDate(Date startDate) { this.startDate = startDate; }
 
-    public List<String> getFlatTypes() {
-        return flatTypes;
-    }
+    public Date getEndDate() { return endDate; }
 
-    public void setFlatTypes(ArrayList<String> flatTypes) {
-        this.flatTypes = flatTypes;
-    }
+    public void setEndDate(Date endDate) { this.endDate = endDate; }
 
-    public boolean isVisible() {
-        return visibility;
-    }
+    public List<String> getFlatTypes() { return flatTypes;}
 
-    public void setVisibility(boolean visibility) {
-        this.visibility = visibility;
-    }
+    public void setFlatTypes(ArrayList<String> flatTypes) { this.flatTypes = flatTypes; }
 
-    public int getTwoRoomUnitsAvailable() {
-        return twoRoomUnitsAvailable;
-    }
+    public boolean isVisible() { return visibility; }
+
+    public void setVisibility(boolean visibility) { this.visibility = visibility; }
+
+    public int getTwoRoomUnitsAvailable() { return twoRoomUnitsAvailable; }
 
     public void setTwoRoomUnitsAvailable(int twoRoomUnitsAvailable) {
         this.twoRoomUnitsAvailable = twoRoomUnitsAvailable;
@@ -114,28 +79,17 @@ public class BTOProject {
         this.threeRoomUnitsAvailable = threeRoomUnitsAvailable;
     }
 
-    public int getMaxOfficers() {
-        return maxOfficers;
-    }
+    public int getMaxOfficers() { return maxOfficers; }
 
-    public List<HDBOfficer> getHDBOfficers() {
-        return HDBOfficers;
-    }
+    public List<HDBOfficer> getHDBOfficers() { return HDBOfficers; }
 
-    public List<Application> getApplications() {
-        return applications; 
-    }
+    public List<Application> getApplications() { return applications; }
 
     public void addApplication(Application application) {
-        if (!applications.contains(application)) {
-            applications.add(application);
-        }
+        if (!applications.contains(application)) { applications.add(application); }
     }
 
-    public void removeApplication(Application application) {
-        applications.remove(application);
-    }
-
+    public void removeApplication(Application application) { applications.remove(application); }
 
     public void setAssignedOfficer(List<String> assignedOfficer) {
         this.assignedOfficer = assignedOfficer;
@@ -179,20 +133,5 @@ public class BTOProject {
         if (remain <= 0) return false;
         setUnits(type, remain - 1);   // create setUnits(..) if missing
         return true;
-    }
-    private List<HDBOfficer> pendingRegistrations = new ArrayList<>();
-
-    public List<HDBOfficer> getPendingRegistrations() {
-        return pendingRegistrations;
-    }
-
-    public void addPendingRegistration(HDBOfficer officer) {
-        if (!pendingRegistrations.contains(officer)) {
-            pendingRegistrations.add(officer);
-        }
-    }
-
-    public void removePendingRegistration(HDBOfficer officer) {
-        pendingRegistrations.remove(officer);
     }
 }
