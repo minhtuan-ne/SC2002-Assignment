@@ -11,6 +11,9 @@ import main.models.Enquiry;
  * Service class to manage all operations related to Enquiries,
  * such as submitting, editing, deleting, replying, and retrieving enquiries.
  * 
+ * @author 
+ * @version 1.0
+ * @since 2025-04-25
  */
 public class EnquiryService {
 
@@ -127,3 +130,4 @@ public class EnquiryService {
         System.out.println("Enquiry not found: " + enquiryId);
     }
 }
+
