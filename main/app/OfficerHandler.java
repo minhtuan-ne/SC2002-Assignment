@@ -72,7 +72,7 @@ public class OfficerHandler implements IUserHandler{
                     // Prompt: Do you intend to apply?
                     System.out.print("Do you intend to apply for this project as an applicant? (yes/no): ");
                     String answer = sc.nextLine().trim().toLowerCase();
-
+                    //if intend to apply then cant register
                     if (answer.equals("yes")) {
                         System.out.println("Registration cancelled – you cannot apply and handle the same project.");
                         break;
@@ -88,6 +88,7 @@ public class OfficerHandler implements IUserHandler{
                     .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()))
                     .collect(Collectors.toList());
 
+                    //check if there is any registration
                     if (registrations.isEmpty()) {
                         System.out.println("You have no registrations.");
                     } else {
@@ -104,18 +105,18 @@ public class OfficerHandler implements IUserHandler{
                     List<Registration> myRegs = registrationSvc.getRegistration().stream()
                         .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()))
                         .collect(Collectors.toList());
-                
+                    // scan myRegs to get registrations
                     if (myRegs.isEmpty()) {
                         System.out.println("You have no registrations to cancel.");
                         break;
                     }
-                
+                    //if myRegs not empty
                     System.out.println("Select a registration to cancel:");
                     for (int i = 0; i < myRegs.size(); i++) {
                         Registration r = myRegs.get(i);
                         System.out.printf("  [%d] %s (Status: %s)\n", i + 1, r.getProject().getProjectName(), r.getStatus());
                     }
-                
+                    // then prompt user to choose what to cancel
                     System.out.print("Enter number: ");
                     int ch = -1;
                     try {
@@ -134,9 +135,11 @@ public class OfficerHandler implements IUserHandler{
                     break;
 
                 case "4": {
+                    //get the project officer is handling
                     BTOProject p = svc.viewHandledProject(me);
                     if (p == null) {
                         System.out.println("You are not handling any project.");
+                    //display
                     } else {
                         System.out.printf("\n%s - %s%n", p.getProjectName(), p.getNeighborhood());
                         System.out.printf("Application Period : %s to %s%n",
@@ -149,8 +152,10 @@ public class OfficerHandler implements IUserHandler{
                 }
 
                 case "5": {
+                    //get all enquiries
                     List<Enquiry> all = enquirySvc.getAllEnquiries();
                     List<Enquiry> list = new ArrayList<>();
+                    //filter enquiries of officer's project
                     if (me.isHandlingProject()){
                         String pid = me.getHandlingProjectId();
                         for (Enquiry e : all)
@@ -159,6 +164,7 @@ public class OfficerHandler implements IUserHandler{
                     }                
                     if (list.isEmpty()) {
                         System.out.println("No enquiries for your project.");
+                    //display all enquiries of the project
                     } else {
                         for (Enquiry e : list)
                             System.out.printf("[%s] %s : %s%n",
@@ -172,6 +178,7 @@ public class OfficerHandler implements IUserHandler{
                     String id = sc.nextLine();
                     System.out.print("Reply message: ");
                     String msg = sc.nextLine();
+                    //go to enquiryService to create a reply
                     enquirySvc.replyToEnquiry(id, msg);
                     break;
                 }
@@ -247,6 +254,7 @@ public class OfficerHandler implements IUserHandler{
                 }
 
                 case "9":
+                    // move to applicant services
                     new ApplicantHandler(applicantSvc, enquirySvc, projectSvc, fileManager).run(me, sc);
                     break;
 
