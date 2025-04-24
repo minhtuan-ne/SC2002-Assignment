@@ -39,9 +39,7 @@ public class ProjectService {
 
                 String projName    = cols[0];
                 String neighborhood= cols[1];
-                String t1          = cols[2];
                 int    u1          = Integer.parseInt(cols[3]);
-                String t2          = cols[5];
                 int    u2          = Integer.parseInt(cols[6]);
                 int    maxOfficers = Integer.parseInt(cols[11]);
 

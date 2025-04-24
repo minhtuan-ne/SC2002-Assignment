@@ -12,8 +12,11 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import main.models.Applicant;
 import main.models.Application;
+import main.models.HDBManager;
 import main.models.HDBOfficer;
+import main.models.User;
 
 public class FileManager {
     public List<List<String>> readFile(String fileName) {
@@ -211,6 +214,57 @@ public class FileManager {
         }
     }
 
+    public List<User> loadAllUser(){
+        List<User> users = new ArrayList<>();
+        Map<String, List<List<String>>> data = getDatabyRole();
+
+        // Load Applicants
+        List<List<String>> applicantData = data.get("Applicant");
+        for (List<String> row : applicantData) {
+            if (row.size() >= 5) {
+                String name = row.get(0);
+                String nric = row.get(1);
+                int age = Integer.parseInt(row.get(2));
+                String maritalStatus = row.get(3);
+                String password = row.get(4);
+                users.add(new Applicant(nric, name, age, maritalStatus, password));
+            }
+        }
+
+        // Load Managers
+        List<List<String>> managerData = data.get("Manager");
+        for (List<String> row : managerData) {
+            if (row.size() >= 5) {
+                String name = row.get(0);
+                String nric = row.get(1);
+                int age = Integer.parseInt(row.get(2));
+                String maritalStatus = row.get(3);
+                String password = row.get(4);
+                users.add(new HDBManager(nric, name, age, maritalStatus, password));
+            }
+        }
+
+        // Load Officers
+        List<List<String>> officerData = data.get("Officer");
+        for (List<String> row : officerData) {
+            if (row.size() >= 7) {
+                String name = row.get(0);
+                String nric = row.get(1);
+                int age = Integer.parseInt(row.get(2));
+                String maritalStatus = row.get(3);
+                String password = row.get(4);
+                HDBOfficer.RegistrationStatus regStatus = HDBOfficer.RegistrationStatus.valueOf(row.get(5));
+                String handlingProjectId = row.get(6).equals("null") ? null : row.get(6);
+
+                HDBOfficer officer = new HDBOfficer(nric, name, age, maritalStatus, password);
+                officer.setRegStatus(regStatus);
+                officer.setHandlingProjectId(handlingProjectId);
+                users.add(officer);
+            }
+        }
+        return users;
+    }
+
     public boolean saveApplication(Application app){
         try {
             Path path = Paths.get("data", "ApplicationList.txt");
@@ -223,14 +277,14 @@ public class FileManager {
             
             // Create a application line
             StringBuilder newApplication = new StringBuilder();
-            newApplication.append(app.getApplicant()).append("\t");
+            newApplication.append(app.getApplicant().getNRIC()).append("\t");
             newApplication.append(app.getProjectName()).append("\t");
             newApplication.append(app.getFlatType()).append("\t");
             newApplication.append(app.getStatus()).append("\t");
             
             lines.add(newApplication.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-            System.out.println("Project saved successfully to file.");
+            System.out.println("Application saved successfully to file.");
             return true;
         } catch (IOException e) {
             System.out.println("Error saving project to file: " + e.getMessage());
@@ -238,7 +292,6 @@ public class FileManager {
             return false;
         }
     }
-    
    
     public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName, boolean isAssigning) {
         try {

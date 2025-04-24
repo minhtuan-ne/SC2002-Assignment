@@ -6,11 +6,15 @@ public class Application {
     private final String flatType;
     private String status; // Pending, Successful, Unsuccessful, Booked
 
-    public Application(Applicant applicant, String projectName, String flatType) {
+    public Application(Applicant applicant, String projectName, String flatType, String status) {
         this.applicant = applicant;
         this.projectName = projectName;
         this.flatType = flatType;
-        this.status = "Pending";
+        this.status = status;
+    }
+
+    public Application(Applicant applicant, String projectName, String flatType) {
+        this(applicant, projectName, flatType, "Pending");
     }
 
     public Applicant getApplicant() {

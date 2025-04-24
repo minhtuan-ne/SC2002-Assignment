@@ -4,16 +4,19 @@ import java.time.ZoneId;
 import java.util.*;
 import main.models.*;
 import main.services.*;
+import main.util.FileManager;
 
 public class ApplicantHandler implements IUserHandler {
     private final ApplicantService applicantSvc;
     private final EnquiryService enquirySvc;
     private final ProjectService projectSvc;
+    private final FileManager fileManager;
 
-    public ApplicantHandler(ApplicantService applicantSvc, EnquiryService enquirySvc, ProjectService projectSvc) {
+    public ApplicantHandler(ApplicantService applicantSvc, EnquiryService enquirySvc, ProjectService projectSvc, FileManager fileManager) {
         this.applicantSvc = applicantSvc;
         this.enquirySvc = enquirySvc;
         this.projectSvc = projectSvc;
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -21,7 +24,7 @@ public class ApplicantHandler implements IUserHandler {
         runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, projectSvc, sc);
     }
 
-    public static void runApplicantLoop(Applicant me, ApplicantService svc, EnquiryService esvc, ProjectService psvc, Scanner sc) {
+    public void runApplicantLoop(Applicant me, ApplicantService svc, EnquiryService esvc, ProjectService psvc, Scanner sc) {
         while (true) {
             System.out.println("\n-- Applicant Menu --");
             System.out.println("1) View available projects");
@@ -106,7 +109,7 @@ public class ApplicantHandler implements IUserHandler {
                             break;
                         }
                         // have apply(...) return boolean success
-                        if (svc.apply(me, selected, ftype)) {
+                        if (svc.apply(me, selected, ftype, fileManager)) {
                             // once it succeeds, stop retrying
                             break;
                         }

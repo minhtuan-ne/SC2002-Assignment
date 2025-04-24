@@ -1,0 +1,2 @@
+Applicant	Project name	Type 1	Status
+S1234567A	Acacia Breeze	2-room	Pending	

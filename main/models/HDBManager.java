@@ -5,7 +5,7 @@ import java.util.List;
 
 public class HDBManager extends User {
     // project list created by each manager
-    private List<BTOProject> projects;
+    private final List<BTOProject> projects;
 
     // constructor
     public HDBManager(String nric, String name, int age, String maritalStatus, String password) {

@@ -1,16 +1,52 @@
 package main.services;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 import main.models.*;
+import main.util.FileManager;
 
 public class ApplicantService{
     private final List<Application> applications = new ArrayList<>();
 
-    public ApplicantService(){}
+    public ApplicantService(FileManager fileManager){
+        try{
+            Path path = Paths.get("data", "ApplicationList.txt");
+            List<String> lines = Files.readAllLines(path).stream()
+                .filter(l -> !l.startsWith("Applicant") && !l.isBlank())
+                .collect(Collectors.toList());
+            List<User> users = fileManager.loadAllUser();
+            Map<String, User> userMap = users.stream()
+                .collect(Collectors.toMap(User::getNRIC, u -> u));
 
-    public boolean apply(Applicant applicant, BTOProject project, String flatType) {
+            for (String line : lines) {
+                String[] cols = line.split("\\t");
+
+                String applicantNRIC    = cols[0];
+                String projectName      = cols[1];
+                String type             = cols[2];
+                String status           = cols[3];
+
+                Applicant applicant = (Applicant) userMap.get(applicantNRIC);
+                if (applicant == null) {
+                    System.err.println("No user found for NRIC: " + applicantNRIC);
+                    continue;
+                }
+
+                Application app = new Application(applicant, projectName, type, status);
+                applications.add(app);
+            }
+        } catch (IOException ex) {
+            System.err.println("ERROR loading ApplicationList.txt: " + ex.getMessage());
+        }
+    }
+
+    public boolean apply(Applicant applicant, BTOProject project, String flatType, FileManager fileManager) {
         //if officer apply, check if managing the project
         if (applicant instanceof HDBOfficer officer) {
             if (officer.isHandlingProject() && project.getProjectName().equalsIgnoreCase(officer.getHandlingProjectId())) {
@@ -54,6 +90,8 @@ public class ApplicantService{
         // passed all checks:
         Application application = new Application(applicant, project.getProjectName(), flatType);
         applications.add(application);
+        fileManager.saveApplication(application);
+        
         System.out.println("Application submitted successfully.");
         return true;
     }

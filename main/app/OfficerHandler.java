@@ -200,7 +200,7 @@ public class OfficerHandler implements IUserHandler{
                 }
 
                 case "8":
-                    new ApplicantHandler(applicantSvc, enquirySvc, projectSvc).run(me, sc);
+                    new ApplicantHandler(applicantSvc, enquirySvc, projectSvc, fileManager).run(me, sc);
                     break;
 
                 case "9": {
