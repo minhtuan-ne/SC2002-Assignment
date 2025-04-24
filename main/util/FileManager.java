@@ -19,7 +19,18 @@ import main.models.HDBOfficer;
 import main.models.Registration;
 import main.models.User;
 
+/**
+ * Handles file input/output for users, projects, applications, and
+ * registrations.
+ * Supports reading from and writing to CSV/TSV-based text files.
+ */
 public class FileManager {
+    /**
+     * Reads a tab-separated file and returns parsed data.
+     *
+     * @param fileName name of file in the /data directory
+     * @return list of rows (each row is a list of columns)
+     */
     public List<List<String>> readFile(String fileName) {
         List<List<String>> fileList = new ArrayList<>();
         try {
@@ -37,7 +48,7 @@ public class FileManager {
                     // Split by tab or multiple spaces
                     String[] rawSplitData = data.split("\\s+");
                     List<String> rowData = new ArrayList<>();
-                    
+
                     // Process the split data to handle comma-separated values
                     StringBuilder currentField = new StringBuilder();
                     for (String field : rawSplitData) {
@@ -57,12 +68,12 @@ public class FileManager {
                             rowData.add(field);
                         }
                     }
-                    
+
                     // Add any remaining field
                     if (!currentField.isEmpty()) {
                         rowData.add(currentField.toString());
                     }
-                    
+
                     fileList.add(rowData);
                 }
             }
@@ -74,40 +85,62 @@ public class FileManager {
         return fileList;
     }
 
+    /**
+     * Returns parsed user/project data grouped by role.
+     *
+     * @return map of role to parsed CSV data
+     */
     public Map<String, List<List<String>>> getDatabyRole() {
         Map<String, List<List<String>>> dataMap = new HashMap<>();
         dataMap.put("Applicant", readFile("ApplicantList.txt"));
-        dataMap.put("Manager",   readFile("ManagerList.txt"));
-        dataMap.put("Officer",   readFile("OfficerList.txt"));
-        dataMap.put("Project",   readFile("ProjectList.txt"));
+        dataMap.put("Manager", readFile("ManagerList.txt"));
+        dataMap.put("Officer", readFile("OfficerList.txt"));
+        dataMap.put("Project", readFile("ProjectList.txt"));
         return dataMap;
     }
 
+    /**
+     * Updates the password for a given user in their role-specific file.
+     *
+     * @param role        user role (applicant/manager/officer)
+     * @param nric        NRIC to update
+     * @param newPassword new password to set
+     * @throws IOException if file I/O fails
+     */
     public void updatePassword(String role, String nric, String newPassword) throws IOException {
         // map role → filename
-        String fileName = switch(role.toLowerCase()) {
-            case "applicant"  -> "ApplicantList.txt";
-            case "manager"    -> "ManagerList.txt";
-            case "officer"    -> "OfficerList.txt";
-            default -> throw new IllegalArgumentException("Unknown role: "+role);
+        String fileName = switch (role.toLowerCase()) {
+            case "applicant" -> "ApplicantList.txt";
+            case "manager" -> "ManagerList.txt";
+            case "officer" -> "OfficerList.txt";
+            default -> throw new IllegalArgumentException("Unknown role: " + role);
         };
         Path path = Paths.get("data", fileName);
         List<String> lines = Files.readAllLines(path);
         String header = lines.remove(0);
         for (int i = 0; i < lines.size(); i++) {
             String line = lines.get(i).trim();
-            if (line.isEmpty()) continue;
+            if (line.isEmpty())
+                continue;
             String[] cols = line.split("\\s+");
-            if (cols.length < 5) continue;
+            if (cols.length < 5)
+                continue;
             if (cols[1].equalsIgnoreCase(nric)) {
-                cols[4] = newPassword;                  // replace password
-                lines.set(i, String.join("\t", cols));  // re‑build line
+                cols[4] = newPassword; // replace password
+                lines.set(i, String.join("\t", cols)); // re‑build line
                 break;
             }
         }
         lines.add(0, header);
         Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
     }
+
+    /**
+     * Loads all officers from a TSV file.
+     *
+     * @param path path to the officer file
+     * @return list of HDBOfficer objects
+     */
     public List<HDBOfficer> loadOfficersFromFile(String path) {
         List<HDBOfficer> list = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
@@ -126,6 +159,12 @@ public class FileManager {
         return list;
     }
 
+    /**
+     * Saves officer data to the specified TSV file.
+     *
+     * @param path     file path
+     * @param officers list of officers to write
+     */
     public void saveOfficersToFile(String path, List<HDBOfficer> officers) {
         try {
             List<String> lines = new ArrayList<>();
@@ -133,7 +172,7 @@ public class FileManager {
 
             // Create a map for fast lookup
             Map<String, HDBOfficer> officerMap = officers.stream()
-                    .collect(Collectors.toMap(HDBOfficer::getNRIC, o -> o, (a, b) -> b));  // overwrite on duplicate NRIC
+                    .collect(Collectors.toMap(HDBOfficer::getNRIC, o -> o, (a, b) -> b)); // overwrite on duplicate NRIC
 
             try (BufferedReader reader = new BufferedReader(new FileReader(path))) {
                 reader.readLine(); // skip header
@@ -160,20 +199,24 @@ public class FileManager {
             e.printStackTrace();
         }
     }
- 
-    public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood, 
-                            Date startDate, Date endDate,
-                            int twoRoomUnits, int threeRoomUnits, 
-                            int twoRoomPrice, int threeRoomPrice, int maxOfficers) {
+
+    /**
+     * Saves a new BTO project to file.
+     */
+    public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood,
+            Date startDate, Date endDate,
+            int twoRoomUnits, int threeRoomUnits,
+            int twoRoomPrice, int threeRoomPrice, int maxOfficers) {
         try {
             Path path = Paths.get("data", "ProjectList.txt");
             List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
-            
+
             // If file is empty or doesn't exist, add header
             if (lines.isEmpty()) {
-                lines.add("Project Name\tNeighborhood\tType 1\tNumber of units for Type 1\tSelling price for Type 1\tType 2\tNumber of units for Type 2\tSelling price for Type 2\tApplication opening date\tApplication closing date\tManager\tOfficer Slot\tOfficer");
+                lines.add(
+                        "Project Name\tNeighborhood\tType 1\tNumber of units for Type 1\tSelling price for Type 1\tType 2\tNumber of units for Type 2\tSelling price for Type 2\tApplication opening date\tApplication closing date\tManager\tOfficer Slot\tOfficer");
             }
-            
+
             // Check if project already exists
             for (int i = 1; i < lines.size(); i++) {
                 String[] cols = lines.get(i).split("\\t");
@@ -182,12 +225,12 @@ public class FileManager {
                     return false;
                 }
             }
-            
+
             // Format dates in dd/MM/yyyy format
             SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
             String startDateStr = sdf.format(startDate);
             String endDateStr = sdf.format(endDate);
-            
+
             // Create a new project line
             StringBuilder newProject = new StringBuilder();
             newProject.append(projectName).append("\t");
@@ -202,8 +245,8 @@ public class FileManager {
             newProject.append(endDateStr).append("\t");
             newProject.append(managerName).append("\t");
             newProject.append(maxOfficers).append("\t");
-            newProject.append("NULL").append("\t");  // Empty assigned officers list initially
-            
+            newProject.append("NULL").append("\t"); // Empty assigned officers list initially
+
             lines.add(newProject.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Project saved successfully to file.");
@@ -215,7 +258,12 @@ public class FileManager {
         }
     }
 
-    public List<User> loadAllUser(){
+    /**
+     * Loads all users from all role-specific files.
+     *
+     * @return list of all users
+     */
+    public List<User> loadAllUser() {
         List<User> users = new ArrayList<>();
         Map<String, List<List<String>>> data = getDatabyRole();
 
@@ -266,24 +314,29 @@ public class FileManager {
         return users;
     }
 
-    public void saveApplication(Application app){
+    /**
+     * Saves a BTO application to file.
+     *
+     * @param app application object to save
+     */
+    public void saveApplication(Application app) {
         try {
             Path path = Paths.get("data", "ApplicationList.txt");
             List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
-            
+
             // If file is empty or doesn't exist, add header
             if (lines.isEmpty()) {
                 lines.add("Applicant\tProject name\tType\tStatus\tPrevStatus");
             }
-            
+
             // Create a application line
             StringBuilder newApplication = new StringBuilder();
             newApplication.append(app.getApplicant().getNRIC()).append("\t");
             newApplication.append(app.getProjectName()).append("\t");
             newApplication.append(app.getFlatType()).append("\t");
             newApplication.append(app.getStatus()).append("\t");
-            newApplication.append(app.getPrevStatus() == null ? "null": app.getPrevStatus()).append("\t");
-            
+            newApplication.append(app.getPrevStatus() == null ? "null" : app.getPrevStatus()).append("\t");
+
             lines.add(newApplication.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Application saved successfully to file.");
@@ -293,6 +346,9 @@ public class FileManager {
         }
     }
 
+    /**
+     * Updates the application status for a given user.
+     */
     public void updateApplication(String nric, Application app) {
         try {
             Path path = Paths.get("data", "ApplicationList.txt");
@@ -300,16 +356,16 @@ public class FileManager {
                 System.out.println("ApplicationList.txt not found.");
                 return;
             }
-    
+
             List<String> lines = Files.readAllLines(path);
             List<String> updatedLines = new ArrayList<>();
-    
+
             for (String line : lines) {
                 if (line.startsWith("Applicant") || line.isBlank()) {
                     updatedLines.add(line);
                     continue;
                 }
-    
+
                 String[] cols = line.split("\\t");
                 if (cols.length >= 4 && cols[0].equals(nric)) {
                     // Found the matching line, update the status
@@ -320,31 +376,36 @@ public class FileManager {
                     updatedLines.add(line);
                 }
             }
-    
+
             Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Application updated successfully.");
         } catch (IOException e) {
             System.out.println("Error updating application: " + e.getMessage());
             e.printStackTrace();
         }
-    }    
+    }
 
-    public void saveRegistration(Registration regist){
+    /**
+     * Saves a new registration record to file.
+     *
+     * @param regist registration object
+     */
+    public void saveRegistration(Registration regist) {
         try {
             Path path = Paths.get("data", "RegistrationList.txt");
             List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
-            
+
             // If file is empty or doesn't exist, add header
             if (lines.isEmpty()) {
                 lines.add("Officer\tProject name\tStatus");
             }
-            
+
             // Create a application line
             StringBuilder newRegistration = new StringBuilder();
             newRegistration.append(regist.getOfficer().getNRIC()).append("\t");
             newRegistration.append(regist.getProject().getProjectName()).append("\t");
             newRegistration.append(regist.getStatus()).append("\t");
-            
+
             lines.add(newRegistration.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Registration saved successfully to file.");
@@ -354,6 +415,9 @@ public class FileManager {
         }
     }
 
+    /**
+     * Updates a registration's status for a given officer and project.
+     */
     public void updateRegistration(String nric, String projectName, HDBOfficer.RegistrationStatus newStatus) {
         try {
             Path path = Paths.get("data", "RegistrationList.txt");
@@ -361,16 +425,16 @@ public class FileManager {
                 System.out.println("RegistrationList.txt not found.");
                 return;
             }
-    
+
             List<String> lines = Files.readAllLines(path);
             List<String> updatedLines = new ArrayList<>();
-    
+
             for (String line : lines) {
                 if (line.startsWith("Officer") || line.isBlank()) {
                     updatedLines.add(line);
                     continue;
                 }
-    
+
                 String[] cols = line.split("\\t");
                 if (cols.length >= 3 && cols[0].equals(nric) && cols[1].equals(projectName)) {
                     // Found the matching line, update the status
@@ -380,32 +444,35 @@ public class FileManager {
                     updatedLines.add(line);
                 }
             }
-    
+
             Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Registration updated successfully.");
         } catch (IOException e) {
             System.out.println("Error updating registration: " + e.getMessage());
             e.printStackTrace();
         }
-    }    
+    }
 
-    public boolean updateOfficerInProject(String projectName, String officerNRIC, boolean isAssigning){
+    /**
+     * Updates officer status and assignment in officer file.
+     */
+    public boolean updateOfficerInProject(String projectName, String officerNRIC, boolean isAssigning) {
         try {
             Path path = Paths.get("./data", "OfficerList.txt");
             if (!Files.exists(path)) {
                 System.out.println("OfficerList.txt file not found at " + path.toAbsolutePath());
                 return false;
             }
-            
+
             List<String> lines = Files.readAllLines(path);
             List<String> updatedLines = new ArrayList<>();
-    
+
             for (String line : lines) {
                 if (line.startsWith("Officer") || line.isBlank()) {
                     updatedLines.add(line);
                     continue;
                 }
-    
+
                 String[] cols = line.split("\\t");
                 if (cols.length >= 6 && cols[1].equals(officerNRIC)) {
                     // Found the matching line, update the status
@@ -416,7 +483,7 @@ public class FileManager {
                     updatedLines.add(line);
                 }
             }
-    
+
             Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Officer updated successfully.");
             return true;
@@ -426,24 +493,28 @@ public class FileManager {
             return false;
         }
     }
-   
-    public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName, boolean isAssigning) {
+
+    /**
+     * Updates project’s assigned officer list and slot information.
+     */
+    public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName,
+            boolean isAssigning) {
         try {
             Path path = Paths.get("./data", "ProjectList.txt");
             if (!Files.exists(path)) {
                 System.out.println("ProjectList.txt file not found at " + path.toAbsolutePath());
                 return false;
             }
-            
+
             List<String> lines = Files.readAllLines(path);
             if (lines.isEmpty()) {
                 System.out.println("ProjectList.txt file is empty");
                 return false;
             }
-            
+
             boolean projectFound = false;
             int projectLineIndex = -1;
-            
+
             // Find the project line
             for (int i = 0; i < lines.size(); i++) {
                 String[] cols = lines.get(i).split("\\t");
@@ -453,27 +524,27 @@ public class FileManager {
                     break;
                 }
             }
-            
+
             if (!projectFound) {
                 System.out.println("Project not found: " + projectName);
                 return false;
             }
-            
+
             // Get the project line and its components
             String line = lines.get(projectLineIndex);
             String[] cols = line.split("\\t");
-            
+
             // Parse the officers column (last column)
             String assignedOfficers = "";
             if (cols.length > 12) {
                 assignedOfficers = cols[12];
             }
-            
+
             List<String> officerList = new ArrayList<>();
             if (!assignedOfficers.isEmpty()) {
                 String[] officersArray = assignedOfficers.split(",");
                 List<String> officers = new ArrayList<>(Arrays.asList(officersArray));
-                if (!officers.isEmpty() && officers.get(0).equals("NULL")){
+                if (!officers.isEmpty() && officers.get(0).equals("NULL")) {
                     officers.remove(0);
                 }
                 for (String officer : officers) {
@@ -483,7 +554,7 @@ public class FileManager {
                     }
                 }
             }
-            
+
             // Get current officer slot count
             int currentOfficerSlot = 10; // Default
             if (cols.length > 11) {
@@ -493,9 +564,9 @@ public class FileManager {
                     System.out.println("Warning: Invalid officer slot number: " + cols[11]);
                 }
             }
-            
+
             boolean changed = false;
-            
+
             // Handle assignment or removal
             if (isAssigning) {
                 if (!officerList.contains(officerName)) {
@@ -511,7 +582,7 @@ public class FileManager {
                 if (officerList.contains(officerName)) {
                     officerList.remove(officerName);
                     changed = true;
-                    if(officerList.isEmpty()){
+                    if (officerList.isEmpty()) {
                         officerList.add("NULL");
                     }
                     // We don't decrease the officer slot count when removing
@@ -520,36 +591,36 @@ public class FileManager {
                     return false;
                 }
             }
-            
+
             if (!changed) {
                 return false;
             }
-            
+
             // Build a new line preserving all columns up to Manager (index 10)
             StringBuilder newLine = new StringBuilder();
-            
+
             // Add all columns up to Manager (index 10)
             for (int i = 0; i < Math.min(11, cols.length); i++) {
                 newLine.append(cols[i]).append("\t");
             }
-            
+
             // Add the updated Officer Slot (index 11)
             newLine.append(currentOfficerSlot);
-            
+
             // Add the updated officer list
             if (!officerList.isEmpty()) {
                 newLine.append("\t").append(String.join(", ", officerList));
             }
-            
+
             // Update the line in the file
             lines.set(projectLineIndex, newLine.toString());
-            
+
             // Write all lines back to the file
             Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Project updated successfully");
-            
+
             updateOfficerInProject(projectName, officerNRIC, isAssigning);
-            
+
             return false;
         } catch (Exception e) {
             System.out.println("Exception occurred: " + e.getMessage());
@@ -558,58 +629,61 @@ public class FileManager {
         }
     }
 
-    public boolean updateProject(String projectName, String newProjectName, String neighborhood, 
-        Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) throws IOException {
+     /**
+     * Updates the project details (except price fields).
+     */
+    public boolean updateProject(String projectName, String newProjectName, String neighborhood,
+            Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");
         if (!Files.exists(path)) {
             System.out.println("Project file not found at: " + path.toAbsolutePath());
             return false;
         }
-        
+
         List<String> lines = Files.readAllLines(path);
         if (lines.isEmpty()) {
             System.out.println("Project file is empty.");
             return false;
         }
-        
+
         // Format dates
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy");
         String startDateStr = sdf.format(startDate);
         String endDateStr = sdf.format(endDate);
-        
+
         boolean projectFound = false;
         for (int i = 1; i < lines.size(); i++) {
             String[] cols = lines.get(i).split("\\t");
             if (cols.length > 0 && cols[0].equalsIgnoreCase(projectName)) {
                 projectFound = true;
-                
+
                 // Create a new line with updated values
                 StringBuilder updatedLine = new StringBuilder();
                 updatedLine.append(newProjectName).append("\t");
                 updatedLine.append(neighborhood).append("\t");
-                
+
                 // Reuse flat types (columns 2-3)
                 updatedLine.append(cols[2]).append("\t");
-                
+
                 // Update 2-room units (column 3)
                 updatedLine.append(twoRoomUnits).append("\t");
-                
+
                 // Keep price (column 4)
                 updatedLine.append(cols[4]).append("\t");
-                
+
                 // Reuse flat type (column 5)
                 updatedLine.append(cols[5]).append("\t");
-                
+
                 // Update 3-room units (column 6)
                 updatedLine.append(threeRoomUnits).append("\t");
-                
+
                 // Keep price (column 7)
                 updatedLine.append(cols[7]).append("\t");
-                
+
                 // Update dates (columns 8-9)
                 updatedLine.append(startDateStr).append("\t");
                 updatedLine.append(endDateStr).append("\t");
-                
+
                 // Keep remaining columns (manager, max officers, assigned officers)
                 for (int j = 10; j < cols.length; j++) {
                     updatedLine.append(cols[j]);
@@ -617,41 +691,44 @@ public class FileManager {
                         updatedLine.append("\t");
                     }
                 }
-                
+
                 // Replace the line
                 lines.set(i, updatedLine.toString());
                 System.out.println("Found and updating project: " + projectName);
                 break;
             }
         }
-        
+
         if (!projectFound) {
             System.out.println("Project not found: " + projectName);
             return false;
         }
-        
+
         // Write updated content back to file
         Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
         System.out.println("Project file updated successfully at: " + path.toAbsolutePath());
         return true;
     }
-    
+
+    /**
+     * Deletes a project from the file based on name.
+     */
     public boolean deleteProjectFromFile(String projectName) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");
         if (!Files.exists(path)) {
             System.out.println("Project file not found at: " + path.toAbsolutePath());
             return false;
         }
-        
+
         List<String> lines = Files.readAllLines(path);
         if (lines.isEmpty()) {
             System.out.println("Project file is empty.");
             return false;
         }
-        
+
         List<String> updatedLines = new ArrayList<>();
         updatedLines.add(lines.get(0)); // Keep the header
-        
+
         boolean projectFound = false;
         for (int i = 1; i < lines.size(); i++) {
             String[] cols = lines.get(i).split("\\t");
@@ -663,12 +740,12 @@ public class FileManager {
                 updatedLines.add(lines.get(i));
             }
         }
-        
+
         if (!projectFound) {
             System.out.println("Project not found in file: " + projectName);
             return false;
         }
-        
+
         // Write updated content back to file
         Files.write(path, updatedLines, StandardOpenOption.TRUNCATE_EXISTING);
         System.out.println("Project deleted from file successfully at: " + path.toAbsolutePath());

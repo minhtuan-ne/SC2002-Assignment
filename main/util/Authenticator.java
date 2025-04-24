@@ -6,22 +6,41 @@ import main.models.HDBManager;
 import main.models.HDBOfficer;
 import main.models.User;
 
+/**
+ * Handles user authentication for the BTO Management System.
+ * Supports login validation across Applicants, Officers, and Managers.
+ */
+
 public class Authenticator {
     private final FileManager fileManager;
     private final Scanner sc;
     private List<User> users = new ArrayList<>();
 
+     /**
+     * Constructs a new Authenticator with the given FileManager.
+     *
+     * @param fileManager file loader for user credentials
+     */
+
     public Authenticator(FileManager fileManager) {
         this.fileManager = fileManager;
         this.sc = new Scanner(System.in);
     }
+
+    /**
+     * Returns the list of users who have successfully logged in during session.
+     *
+     * @return list of users
+     */
     public List<User> getUsers() {
         return users;
     }
 
-    /**
-     * Prompts for NRIC/password, then returns the real User object.
-     * Checks roles in the fixed order: Manager → Officer → Applicant.
+     /**
+     * Prompts user to log in with NRIC and password.
+     * Validates login credentials and returns a User object on success.
+     *
+     * @return the authenticated User object
      */
     public User logIn() {
         Map<String, List<List<String>>> data = fileManager.getDatabyRole();
