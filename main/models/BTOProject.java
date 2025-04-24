@@ -1,6 +1,5 @@
 package main.models;
 
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -15,7 +14,7 @@ public class BTOProject {
     private final int maxOfficers;                  // Max number of HDB officers that can handle this project
     private List<HDBOfficer> officers;              // The officers assigned to handle
 
-    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<Flat> flats, int maxOfficers, List<String> assignedOfficer) {
+    public BTOProject(HDBManager manager, String projectName, String neighborhood, Date startDate, Date endDate, List<Flat> flats, int maxOfficers, List<HDBOfficer> assignedOfficer) {
         this.manager = manager;
         this.projectName = projectName;
         this.neighborhood = neighborhood;
@@ -24,7 +23,7 @@ public class BTOProject {
         this.flats = flats;
         this.maxOfficers = maxOfficers;
         this.visibility = true; 
-        this.officers = new ArrayList<>();
+        this.officers = assignedOfficer;
     }
     
     public HDBManager getManager() { return manager; }

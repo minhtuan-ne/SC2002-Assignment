@@ -154,6 +154,17 @@ public class ManagerHandler implements IUserHandler {
                                 start, end, p.isVisible() ? "Yes" : "No");
                             System.out.printf("   Units - 2-room: %d, 3-room: %d%n", 
                                 p.getUnits("2-room"), p.getUnits("3-room"));
+                            
+                            List<HDBOfficer> officers = p.getOfficers();
+                            System.out.println("   Assigned Officers:");
+                            if (officers.isEmpty()) {
+                                System.out.println("      (none)");
+                            } else {
+                                for (HDBOfficer o : officers) {
+                                    System.out.printf("      - %s (NRIC: %s, Status: %s)%n", 
+                                        o.getName(), o.getNRIC(), o.getRegStatus());
+                                }
+                            }
                         }
                     }
                     break;

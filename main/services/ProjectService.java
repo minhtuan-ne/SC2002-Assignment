@@ -33,6 +33,7 @@ public class ProjectService {
             DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
             Map<String, List<List<String>>> userData = fileManager.getDatabyRole();
             List<List<String>> mgrRows = userData.getOrDefault("Manager", Collections.emptyList());
+            List<User> allUsers = fileManager.loadAllUser();
 
             for (String line : lines) {
                 String[] cols = line.split("\\t");
@@ -74,7 +75,15 @@ public class ProjectService {
                                                 .toList();
 
                 List<Flat> flats = List.of(new TwoRoom(u1, 0), new ThreeRoom(u2, 0));
-                BTOProject project = new BTOProject(manager, projName, neighborhood, sd, ed,flats, maxOfficers, officerList);
+                List<HDBOfficer> officers = allUsers.stream()
+                    .filter(u -> u instanceof HDBOfficer && officerList.contains(u.getName()))
+                    .map(u -> (HDBOfficer) u)
+                    .collect(Collectors.toList());
+                officers.forEach(o -> {
+                    o.setHandlingProjectId(projName);
+                    o.setRegStatus(HDBOfficer.RegistrationStatus.APPROVED);
+                });
+                BTOProject project = new BTOProject(manager, projName, neighborhood, sd, ed,flats, maxOfficers, officers);
 
                 projects.add(project);
                 manager.addProject(project);
