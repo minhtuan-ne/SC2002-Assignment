@@ -12,6 +12,7 @@ import java.nio.file.StandardOpenOption;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import main.models.Application;
 import main.models.HDBOfficer;
 
 public class FileManager {
@@ -197,9 +198,37 @@ public class FileManager {
             newProject.append(endDateStr).append("\t");
             newProject.append(managerName).append("\t");
             newProject.append(maxOfficers).append("\t");
-            newProject.append("");  // Empty assigned officers list initially
+            newProject.append("NULL").append("\t");  // Empty assigned officers list initially
             
             lines.add(newProject.toString());
+            Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("Project saved successfully to file.");
+            return true;
+        } catch (IOException e) {
+            System.out.println("Error saving project to file: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean saveApplication(Application app){
+        try {
+            Path path = Paths.get("data", "ApplicationList.txt");
+            List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
+            
+            // If file is empty or doesn't exist, add header
+            if (lines.isEmpty()) {
+                lines.add("Applicant\tProject name\tType 1\tStatus");
+            }
+            
+            // Create a application line
+            StringBuilder newApplication = new StringBuilder();
+            newApplication.append(app.getApplicant()).append("\t");
+            newApplication.append(app.getProjectName()).append("\t");
+            newApplication.append(app.getFlatType()).append("\t");
+            newApplication.append(app.getStatus()).append("\t");
+            
+            lines.add(newApplication.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Project saved successfully to file.");
             return true;

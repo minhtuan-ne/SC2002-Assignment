@@ -11,7 +11,6 @@ import main.util.FileManager;
 public class HDBManagerService {
     private final FileManager fileManager;
     private final ProjectService projectSvc;
-    private List<String> assignedOfficer;
 
     public HDBManagerService(ProjectService projectSvc, FileManager fileManager) {
         this.projectSvc = projectSvc;
@@ -220,10 +219,7 @@ public class HDBManagerService {
             }
         }
     }
-    public List<String> getAssignedOfficer() {
-        return assignedOfficer == null ? assignedOfficer: new ArrayList<>();
-    }
-  
+
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (project.getManager().getNRIC().equals(manager.getNRIC())) {
             project.addOfficer(officer);

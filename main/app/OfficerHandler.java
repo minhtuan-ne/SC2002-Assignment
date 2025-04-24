@@ -91,12 +91,12 @@ public class OfficerHandler implements IUserHandler{
                     if (p == null) {
                         System.out.println("You are not handling any project.");
                     } else {
-                        System.out.printf("\n%s – %s%n", p.getProjectName(), p.getNeighborhood());
+                        System.out.printf("\n%s - %s%n", p.getProjectName(), p.getNeighborhood());
                         System.out.printf("Application Period : %s to %s%n",
                                 p.getStartDate(), p.getEndDate());
                         System.out.printf("Visible to public   : %s%n", p.isVisible());
-                        System.out.printf("2‑Room left         : %d%n", p.getUnits("2-room"));
-                        System.out.printf("3‑Room left         : %d%n", p.getUnits("3-room"));
+                        System.out.printf("2-Room left         : %d%n", p.getUnits("2-room"));
+                        System.out.printf("3-Room left         : %d%n", p.getUnits("3-room"));
                     }
                     break;
                 }
