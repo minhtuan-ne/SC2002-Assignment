@@ -433,7 +433,11 @@ public class FileManager {
             
             List<String> officerList = new ArrayList<>();
             if (!assignedOfficers.isEmpty()) {
-                String[] officers = assignedOfficers.split(",");
+                String[] officersArray = assignedOfficers.split(",");
+                List<String> officers = new ArrayList<>(Arrays.asList(officersArray));
+                if (!officers.isEmpty() && officers.get(0).equals("NULL")){
+                    officers.remove(0);
+                }
                 for (String officer : officers) {
                     String trimmedOfficer = officer.trim();
                     if (!trimmedOfficer.isEmpty()) {
@@ -469,6 +473,9 @@ public class FileManager {
                 if (officerList.contains(officerName)) {
                     officerList.remove(officerName);
                     changed = true;
+                    if(officerList.isEmpty()){
+                        officerList.add("NULL");
+                    }
                     // We don't decrease the officer slot count when removing
                 } else {
                     System.out.println("Officer not found in project");

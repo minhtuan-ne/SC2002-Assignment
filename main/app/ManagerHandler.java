@@ -52,6 +52,7 @@ public class ManagerHandler implements IUserHandler {
 
             switch (choice) {
                 case "1": { // Create project
+
                     System.out.print("Project name: ");
                     String name = sc.nextLine();
                     System.out.print("Neighborhood: ");
@@ -62,8 +63,33 @@ public class ManagerHandler implements IUserHandler {
                     System.out.print("End date (dd/MM/yyyy): ");
                     String endDateStr = sc.nextLine();
                     
+                    // Check overlapping time
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate startLocal = LocalDate.parse(startDateStr, fmt);
+                    LocalDate endLocal = LocalDate.parse(endDateStr, fmt);
+                    List<BTOProject> createdProjects = me.getProjects();
+                    boolean overlap = false;
+                    for (BTOProject project : createdProjects) {
+                        LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+                        if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
+                            System.out.printf("Project overlaps with: %s (%s to %s)\n", 
+                                project.getProjectName(),
+                                existingStart.format(fmt),
+                                existingEnd.format(fmt)
+                            );
+                            overlap = true;
+                            break;
+                        }
+                    }
+
+                    if (overlap) {
+                        System.out.println("Cannot create project. The date range overlaps with another project.");
+                        break;
+                    }
+
                     try {
-                        DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                         Date startDate = Date.from(LocalDate.parse(startDateStr, fmt)
                                         .atStartOfDay(ZoneId.systemDefault()).toInstant());
                         Date endDate = Date.from(LocalDate.parse(endDateStr, fmt)
