@@ -13,9 +13,6 @@ import main.util.FileManager;
  * creating, editing, deleting BTO projects, toggling visibility, assigning officers,
  * handling applications and withdrawals, and generating booking reports.
  * 
- * @author 
- * @version 1.0
- * @since 2025-04-25
  */
 public class HDBManagerService {
     private final FileManager fileManager;
