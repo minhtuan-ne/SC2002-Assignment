@@ -13,8 +13,10 @@ import main.util.FileManager;
 
 public class ApplicantService{
     private final List<Application> applications = new ArrayList<>();
+    private final FileManager fileManager;
 
     public ApplicantService(FileManager fileManager){
+        this.fileManager = fileManager;
         try{
             Path path = Paths.get("data", "ApplicationList.txt");
             List<String> lines = Files.readAllLines(path).stream()
@@ -154,8 +156,9 @@ public class ApplicantService{
         }
 
         if (app.getStatus().equalsIgnoreCase("Pending") || app.getStatus().equalsIgnoreCase("Successful")) {
-            app.setStatus("Unsuccessful");
-            System.out.println("Application withdrawn.");
+            app.setStatus("Withdrawing");
+            fileManager.updateApplication(applicant.getNRIC(), "Withdrawing");
+            System.out.println("Withdrawal request submitted!");
             return true;
         }
 

@@ -265,7 +265,7 @@ public class FileManager {
         return users;
     }
 
-    public boolean saveApplication(Application app){
+    public void saveApplication(Application app){
         try {
             Path path = Paths.get("data", "ApplicationList.txt");
             List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
@@ -285,13 +285,46 @@ public class FileManager {
             lines.add(newApplication.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Application saved successfully to file.");
-            return true;
         } catch (IOException e) {
             System.out.println("Error saving project to file: " + e.getMessage());
             e.printStackTrace();
-            return false;
         }
     }
+
+    public void updateApplication(String nric, String newStatus) {
+        try {
+            Path path = Paths.get("data", "ApplicationList.txt");
+            if (!Files.exists(path)) {
+                System.out.println("ApplicationList.txt not found.");
+                return;
+            }
+    
+            List<String> lines = Files.readAllLines(path);
+            List<String> updatedLines = new ArrayList<>();
+    
+            for (String line : lines) {
+                if (line.startsWith("Applicant") || line.isBlank()) {
+                    updatedLines.add(line);
+                    continue;
+                }
+    
+                String[] cols = line.split("\\t");
+                if (cols.length >= 4 && cols[0].equals(nric)) {
+                    // Found the matching line, update the status
+                    cols[3] = newStatus;
+                    updatedLines.add(String.join("\t", cols));
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+    
+            Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("Application updated successfully.");
+        } catch (IOException e) {
+            System.out.println("Error updating application: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }    
    
     public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName, boolean isAssigning) {
         try {

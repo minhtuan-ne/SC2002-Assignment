@@ -186,12 +186,10 @@ public class HDBManagerService {
         }
     }
     
-    public void handleWithdrawal(HDBManager manager, Application application) {
+    public boolean handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
         for (BTOProject project : projectSvc.getAllProjects()) {
-            if (project.getManager().equals(manager)
-                && project.getProjectName().equalsIgnoreCase(projectName)) {
-
+            if (project.getProjectName().equalsIgnoreCase(projectName)) {
                 String status = application.getStatus();
                 if ("Successful".equalsIgnoreCase(status) 
                     || "Booked".equalsIgnoreCase(status)) {
@@ -200,8 +198,11 @@ public class HDBManagerService {
                     project.setUnits(flatType, current + 1);
                 }
                 application.setStatus("Withdrawn");
+                fileManager.updateApplication(application.getApplicant().getNRIC(), "Withdrawn");
+                return true;
             }
         }
+        return false;
     }
 
     public void bookingReport(HDBManager manager, String filter) {

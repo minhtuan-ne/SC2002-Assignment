@@ -462,7 +462,7 @@ public class ManagerHandler implements IUserHandler {
                     
                     int count = 0;
                     for (Application app : applications) {
-                        if ("Successful".equals(app.getStatus()) || "Pending".equals(app.getStatus())) {
+                        if ("Withdrawing".equals(app.getStatus())) {
                             count++;
                             System.out.printf("%d) NRIC: %s, Name: %s, Status: %s, Flat Type: %s%n", count,
                                 app.getApplicant().getNRIC(),
@@ -484,7 +484,7 @@ public class ManagerHandler implements IUserHandler {
                     Application foundApp = null;
                     for (Application app : applications) {
                         if (app.getApplicant().getNRIC().equalsIgnoreCase(nric) && 
-                            ("Successful".equals(app.getStatus()) || "Pending".equals(app.getStatus()))) {
+                            ("Withdrawing".equals(app.getStatus()))) {
                             foundApp = app;
                             break;
                         }
@@ -496,8 +496,12 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     // Process the withdrawal
-                    managerSvc.handleWithdrawal(me, foundApp);
-                    System.out.println("Withdrawal processed successfully.");
+                    if(managerSvc.handleWithdrawal(me, foundApp)){
+                        System.out.println("Withdrawal processed successfully.");                        
+                    }
+                    else{
+                        System.out.println("Error while withdrawing.");
+                    }
                     break;
                 }
                 
