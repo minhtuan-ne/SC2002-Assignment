@@ -16,7 +16,7 @@ This is the GitHub repository for NTU SC2002 Assignment AY24/25 Semester 2. BTO 
 - **`main/`**: The source code of the program.
 - **`data/`**: Contains application data files such as users, projects, applications, and registrations.
 - **`uml/`**: The uml file (open with Visual Paradigm)
-- **`html/`**: Generated Javadoc documentation for the project.
+- **`doc/`**: Generated Javadoc documentation for the project.
 
 ---
 
