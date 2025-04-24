@@ -9,6 +9,10 @@ import main.models.*;
 import main.services.*;
 import main.util.FileManager;
 
+/**
+ * Handles all CLI interactions for an HDB Manager.
+ * Provides access to create, manage, and moderate BTO projects and registrations.
+ */
 public class ManagerHandler implements IUserHandler {
     private final HDBManagerService managerSvc;
     private final EnquiryService enquirySvc;
@@ -16,8 +20,15 @@ public class ManagerHandler implements IUserHandler {
     private final ProjectService projectSvc;
     private final FileManager fileManager;
 
-    // Constructor
-
+    /**
+     * Constructs a new ManagerHandler instance.
+     *
+     * @param managerService     manager-related logic service
+     * @param enquiryService     enquiry processing service
+     * @param registrationService officer registration handler
+     * @param projectService     project management service
+     * @param fileManager        file operations handler
+     */
     public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService, ProjectService projectService, FileManager fileManager) {
         this.managerSvc = managerService;
         this.enquirySvc = enquiryService;
@@ -25,12 +36,24 @@ public class ManagerHandler implements IUserHandler {
         this.projectSvc = projectService;
         this.fileManager = fileManager;
     }
-
+    
+    /**
+     * Launches the manager's CLI interface loop.
+     *
+     * @param user the logged-in HDB manager
+     * @param sc   scanner for user input
+     */
     @Override
     public void run(User user, Scanner sc) {
         runManagerLoop((HDBManager) user, sc);
     }
-    //public void runManagerLoop(HDBManager me, HDBManagerService svc, RegistrationService rsvc, ApplicantService asvc, Scanner sc, EnquiryService iesvc) {
+    
+    /**
+     * Contains full logic for HDB Manager command handling.
+     *
+     * @param me the current logged-in HDB manager
+     * @param sc scanner for console input
+     */
     public void runManagerLoop(HDBManager me, Scanner sc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");

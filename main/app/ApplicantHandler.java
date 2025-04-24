@@ -6,24 +6,51 @@ import main.models.*;
 import main.services.*;
 import main.util.FileManager;
 
+/**
+ * Handles all CLI interactions for an Applicant user.
+ * Provides access to BTO applications, enquiries, and password changes.
+ */
 public class ApplicantHandler implements IUserHandler {
     private final ApplicantService applicantSvc;
     private final EnquiryService enquirySvc;
     private final ProjectService projectSvc;
     private final FileManager fileManager;
 
+    /**
+     * Constructs the applicant menu handler.
+     *
+     * @param applicantSvc  service for applicant-related operations
+     * @param enquirySvc    service for enquiry handling
+     * @param projectSvc    service for project viewing and application
+     * @param fileManager   file handler for persistence
+     */
     public ApplicantHandler(ApplicantService applicantSvc, EnquiryService enquirySvc, ProjectService projectSvc, FileManager fileManager) {
         this.applicantSvc = applicantSvc;
         this.enquirySvc = enquirySvc;
         this.projectSvc = projectSvc;
         this.fileManager = fileManager;
     }
-
+    
+    /**
+     * Starts the applicant interaction loop.
+     *
+     * @param user the logged-in user (cast to Applicant)
+     * @param sc   scanner for CLI input
+     */
     @Override
     public void run(User user, Scanner sc) {
         runApplicantLoop((Applicant) user, applicantSvc, enquirySvc, projectSvc, sc);
     }
 
+    /**
+     * Displays the full applicant menu loop and handles command selection.
+     *
+     * @param me  the applicant object
+     * @param svc service for application logic
+     * @param esvc service for enquiry logic
+     * @param psvc project listing service
+     * @param sc  scanner for user input
+     */
     public void runApplicantLoop(Applicant me, ApplicantService svc, EnquiryService esvc, ProjectService psvc, Scanner sc) {
         while (true) {
             System.out.println("\n-- Applicant Menu --");

@@ -5,7 +5,19 @@ import main.models.*;
 import main.services.*;
 import main.util.*;
 
+
+/**
+ * Entry point of the BTO Management System CLI application.
+ * Handles initialization, authentication, and routing users to the appropriate handler.
+ */
 public class BTOApp {
+	/**
+     * Starts the CLI-based BTO system.
+     *
+     * Initializes services and enters a login loop where users are routed to role-based menus.
+     *
+     * @param args command-line arguments (not used)
+     */
     public static void main(String[] args) {
         // 1) Core infra
         FileManager fileManager       = new FileManager();

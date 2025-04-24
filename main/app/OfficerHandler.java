@@ -6,6 +6,11 @@ import main.models.*;
 import main.services.*;
 import main.util.*;
 
+
+/**
+ * Handles all CLI interactions for an HDB Officer.
+ * Combines officer tasks like registration and booking with optional applicant functions.
+ */
 public class OfficerHandler implements IUserHandler{
     private final HDBOfficerService officerSvc;
     private final ApplicantService applicantSvc;
@@ -14,7 +19,18 @@ public class OfficerHandler implements IUserHandler{
     private final ProjectService projectSvc;
     private final Authenticator auth;
     private final FileManager fileManager;
-        
+    
+    /**
+     * Constructs a new OfficerHandler instance.
+     *
+     * @param officerService      officer-specific logic
+     * @param applicantService    shared applicant services
+     * @param enquiryService      service to handle enquiries
+     * @param registrationService registration logic
+     * @param projectService      service for project data
+     * @param auth                authentication manager
+     * @param fileManager         file I/O handler
+     */
     public OfficerHandler(
             HDBOfficerService officerService,
             ApplicantService applicantService,
@@ -32,13 +48,33 @@ public class OfficerHandler implements IUserHandler{
         this.fileManager = fileManager;
         this.registrationService = registrationService;
     }
-
+    
+    /**
+     * Runs the officer’s main interaction loop.
+     *
+     * @param user the logged-in officer
+     * @param sc   scanner for CLI input
+     */
     @Override
     public void run(User user, Scanner sc) {
         runOfficerLoop((HDBOfficer) user, officerSvc, applicantSvc, projectSvc, enquirySvc, registrationService,
             projectSvc.getAllProjects(), sc, auth, fileManager);
     }
 
+    /**
+     * Full interaction flow for officers including registration and booking duties.
+     *
+     * @param me         the logged-in officer
+     * @param svc        officer logic service
+     * @param applicantSvc shared applicant services
+     * @param projectSvc project data service
+     * @param enquirySvc enquiry service
+     * @param registrationSvc registration manager
+     * @param projects   list of available BTO projects
+     * @param sc         scanner for input
+     * @param auth       login manager
+     * @param fileManager persistence handler
+     */
     public static void runOfficerLoop(HDBOfficer me, HDBOfficerService svc, ApplicantService applicantSvc, ProjectService projectSvc, EnquiryService enquirySvc,
         RegistrationService registrationSvc, List<BTOProject> projects, Scanner sc, Authenticator auth, FileManager fileManager) {
         while (true) {
