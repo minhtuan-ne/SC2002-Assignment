@@ -8,42 +8,63 @@ import java.util.stream.Collectors;
 import main.models.*;
 import main.util.FileManager;
 
+/**
+ * Service class that handles operations related to HDB Managers such as
+ * creating, editing, deleting BTO projects, toggling visibility, assigning officers,
+ * handling applications and withdrawals, and generating booking reports.
+ * 
+ * @author 
+ * @version 1.0
+ * @since 2025-04-25
+ */
 public class HDBManagerService {
     private final FileManager fileManager;
     private final ProjectService projectSvc;
 
+    /**
+     * Constructs an HDBManagerService with the specified project and file managers.
+     *
+     * @param projectSvc service to handle project-related logic
+     * @param fileManager utility for file persistence
+     */
     public HDBManagerService(ProjectService projectSvc, FileManager fileManager) {
         this.projectSvc = projectSvc;
         this.fileManager = fileManager;
     }
 
-    public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) {    
+    /**
+     * Creates a new BTO project managed by the specified HDB manager.
+     *
+     * @param manager the manager creating the project
+     * @param name project name
+     * @param neighborhood neighborhood location
+     * @param startDate application start date
+     * @param endDate application end date
+     * @param twoRoomUnits number of 2-room units
+     * @param threeRoomUnits number of 3-room units
+     * @return true if project is successfully created
+     */
+    public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) {
         List<BTOProject> managerProjects = viewOwnProjects(manager);
-        
-        // Check if manager has any projects with visibility ON and application deadline not passed
-        Date currentDate = new Date(); // Get current date
-        
+        Date currentDate = new Date();
+
         for (BTOProject p : managerProjects) {
             System.out.println("Project: " + p.getProjectName() + ", Visible: " + p.isVisible() + 
                             ", End date: " + p.getEndDate() + ", Current date: " + currentDate);
-            
             if (p.isVisible() && !currentDate.after(p.getEndDate())) {
                 System.out.println("Project is visible and not expired");
                 break;
             }
         }
-    
-        // Create and save the project as before
+
         List<Flat> flats = List.of(new TwoRoom(twoRoomUnits, 0), new ThreeRoom(threeRoomUnits, 0));
-        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flats, 10, new ArrayList<>());       
+        BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flats, 10, new ArrayList<>());
         projectSvc.addProject(newProject);
         manager.addProject(newProject);
-    
-        // Save project to file
-        // Set default prices - these would normally come from parameters
-        int twoRoomPrice = 350000;  // Default 2-room price
-        int threeRoomPrice = 450000; // Default 3-room price
-        
+
+        int twoRoomPrice = 350000;
+        int threeRoomPrice = 450000;
+
         fileManager.saveProject(
             manager.getNRIC(),
             manager.getName(),
@@ -55,65 +76,81 @@ public class HDBManagerService {
             threeRoomUnits,
             twoRoomPrice,
             threeRoomPrice,
-            10 
+            10
         );
-        
+
         return true;
     }
 
+    /**
+     * Returns all BTO projects in the system.
+     *
+     * @return list of all projects
+     */
     public List<BTOProject> viewAllProjects() {
         return projectSvc.getAllProjects();
     }
 
+    /**
+     * Returns a list of projects created by the specified manager.
+     *
+     * @param manager the manager whose projects are retrieved
+     * @return list of projects owned by the manager
+     */
     public List<BTOProject> viewOwnProjects(HDBManager manager) {
         List<BTOProject> ownProjects = manager.getProjects();
-        
+
         if (ownProjects.isEmpty()) {
             ownProjects = projectSvc.getAllProjects().stream()
                 .filter(p -> p.getManager().getNRIC().equals(manager.getNRIC()))
                 .collect(Collectors.toList());
-            
-            // Update manager's personal list for future use
             for (BTOProject p : ownProjects) {
                 manager.addProject(p);
             }
         }
-        
+
         return ownProjects;
     }
 
+    /**
+     * Sets visibility for a project managed by the specified manager.
+     *
+     * @param manager the project manager
+     * @param project the project to update
+     * @param visibility new visibility state
+     */
     public void toggleVisibility(HDBManager manager, BTOProject project, boolean visibility) {
         if (project.getManager().getNRIC().equals(manager.getNRIC())) {
             project.setVisibility(visibility);
         }
     }
 
+    /**
+     * Edits a project and updates its values both in memory and file.
+     *
+     * @param manager the manager modifying the project
+     * @param project the project to edit
+     * @param newName new project name
+     * @param newNeighborhood new neighborhood
+     * @param newStartDate new start date
+     * @param newEndDate new end date
+     * @param newTwoRoomUnits updated 2-room unit count
+     * @param newThreeRoomUnits updated 3-room unit count
+     */
     public void editBTOProject(HDBManager manager, BTOProject project, String newName, String newNeighborhood,
         Date newStartDate, Date newEndDate, int newTwoRoomUnits, int newThreeRoomUnits) {
-        
-        // Store original project name before updating (in case it changes)
+
         String originalName = project.getProjectName();
-        
-        // Update in-memory project
+
         project.setProjectName(newName);
         project.setNeighborhood(newNeighborhood);
         project.setStartDate(newStartDate);
         project.setEndDate(newEndDate);
-        project.setUnits("2-room",newTwoRoomUnits);
-        project.setUnits("3-room",newThreeRoomUnits);
-        
-        // Update the project file
+        project.setUnits("2-room", newTwoRoomUnits);
+        project.setUnits("3-room", newThreeRoomUnits);
+
         try {
-            boolean success = fileManager.updateProject(
-                originalName,    // Original name to find the entry
-                newName,         // New project name
-                newNeighborhood, 
-                newStartDate, 
-                newEndDate, 
-                newTwoRoomUnits, 
-                newThreeRoomUnits
-            );
-            
+            boolean success = fileManager.updateProject(originalName, newName, newNeighborhood, newStartDate, newEndDate, newTwoRoomUnits, newThreeRoomUnits);
             if (!success) {
                 System.out.println("Failed to update project in file. Memory updated but file not changed.");
             }
@@ -122,16 +159,18 @@ public class HDBManagerService {
             e.printStackTrace();
         }
     }
-    
+
+    /**
+     * Deletes a BTO project from memory and file.
+     *
+     * @param manager the manager deleting the project
+     * @param project the project to delete
+     */
     public void deleteBTOProject(HDBManager manager, BTOProject project) {
-        // Store project name before removing it
         String projectName = project.getProjectName();
-        
-        // Remove from memory
         manager.removeProject(project);
         projectSvc.removeProject(project);
-        
-        // Remove from file
+
         try {
             boolean success = fileManager.deleteProjectFromFile(projectName);
             if (!success) {
@@ -143,56 +182,58 @@ public class HDBManagerService {
         }
     }
 
+    /**
+     * Approves or rejects an application under a project managed by the given manager.
+     *
+     * @param manager the approving manager
+     * @param application the application to process
+     * @param approve true to approve, false to reject
+     * @return true if operation was successful
+     */
     public boolean handleBTOApplication(HDBManager manager, Application application, boolean approve) {
         String projectName = application.getProjectName();
-        
-        // Find the correct project
         BTOProject matchingProject = null;
+
         for (BTOProject project : projectSvc.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
                 matchingProject = project;
                 break;
             }
         }
-        
-        if (matchingProject == null) {
+
+        if (matchingProject == null || !matchingProject.getManager().getNRIC().equals(manager.getNRIC())) {
             return false;
         }
-        
-        // Check if manager has permission to manage this project
-        if (!matchingProject.getManager().getNRIC().equals(manager.getNRIC())) {
-            return false;
-        }
-        
+
         if (approve) {
-            // Check available units before approving
             String flatType = application.getFlatType();
             int available = matchingProject.getUnits(flatType);
-            
             if (available > 0) {
-                // Update application status
                 application.setStatus("Successful");
-                
-                // Reduce available units
                 matchingProject.setUnits(flatType, available - 1);
                 return true;
             } else {
-                return false;  // No units available to approve
+                return false;
             }
         } else {
-            // Reject the application
             application.setStatus("Unsuccessful");
-            return true;  // Rejection is always successful
+            return true;
         }
     }
-    
+
+    /**
+     * Handles a withdrawal request by updating unit availability and application status.
+     *
+     * @param manager the manager processing the withdrawal
+     * @param application the application to withdraw
+     * @return true if withdrawal is processed
+     */
     public boolean handleWithdrawal(HDBManager manager, Application application) {
         String projectName = application.getProjectName();
         for (BTOProject project : projectSvc.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
                 String status = application.getStatus();
-                if ("Successful".equalsIgnoreCase(status) 
-                    || "Booked".equalsIgnoreCase(status)) {
+                if ("Successful".equalsIgnoreCase(status) || "Booked".equalsIgnoreCase(status)) {
                     String flatType = application.getFlatType();
                     int current = project.getUnits(flatType);
                     project.setUnits(flatType, current + 1);
@@ -206,6 +247,12 @@ public class HDBManagerService {
         return false;
     }
 
+    /**
+     * Generates a report of all booked flats filtered by flat type.
+     *
+     * @param manager the manager generating the report
+     * @param filter flat type filter (e.g., "2-room")
+     */
     public void bookingReport(HDBManager manager, String filter) {
         List<BTOProject> all = manager.getProjects();
         for (BTOProject project : all) {
@@ -222,46 +269,56 @@ public class HDBManagerService {
         }
     }
 
+    /**
+     * Assigns an officer to a project if the manager has control over it.
+     *
+     * @param manager the manager assigning the officer
+     * @param project the target project
+     * @param officer the officer to assign
+     * @return true if successful
+     */
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (project.getManager().getNRIC().equals(manager.getNRIC())) {
             project.addOfficer(officer);
-            
-            // Need to get officer name to match the format in the file
             String officerName = getOfficerNameByNRIC(officer.getNRIC());
-            
-            // Update the project file with the new officer assignment
             fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officerName, true);
-            
             return true;
         }
         return false;
     }
 
+    /**
+     * Removes an officer from a project.
+     *
+     * @param manager the manager controlling the project
+     * @param project the project to update
+     * @param officer the officer to remove
+     * @return true if successful
+     */
     public boolean removeOfficerFromProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (project.getManager().equals(manager)) {
             project.removeOfficer(officer);
-            
-            // Need to get officer name to match the format in the file
             String officerName = getOfficerNameByNRIC(officer.getNRIC());
-            
-            // Update the project file to remove the officer
             fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officerName, false);
-            
             return true;
         }
         return false;
     }
-    
-    // Helper method to get officer name by NRIC
+
+    /**
+     * Retrieves officer's name by their NRIC from the OfficerList file.
+     *
+     * @param nric NRIC of the officer
+     * @return name of the officer if found, else "Unknown"
+     */
     private String getOfficerNameByNRIC(String nric) {
-        
         List<List<String>> officers = fileManager.readFile("OfficerList.txt");
         for (List<String> officer : officers) {
             if (officer.size() > 1 && officer.get(1).equals(nric)) {
-                return officer.get(0); // Return officer name
+                return officer.get(0);
             }
         }
-        
-        return "Unknown"; // Fallback if officer not found
+        return "Unknown";
     }
 }
+
