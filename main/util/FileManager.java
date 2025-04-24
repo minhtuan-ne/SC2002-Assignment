@@ -388,6 +388,44 @@ public class FileManager {
             e.printStackTrace();
         }
     }    
+
+    public boolean updateOfficerInProject(String projectName, String officerNRIC, boolean isAssigning){
+        try {
+            Path path = Paths.get("./data", "OfficerList.txt");
+            if (!Files.exists(path)) {
+                System.out.println("OfficerList.txt file not found at " + path.toAbsolutePath());
+                return false;
+            }
+            
+            List<String> lines = Files.readAllLines(path);
+            List<String> updatedLines = new ArrayList<>();
+    
+            for (String line : lines) {
+                if (line.startsWith("Officer") || line.isBlank()) {
+                    updatedLines.add(line);
+                    continue;
+                }
+    
+                String[] cols = line.split("\\t");
+                if (cols.length >= 6 && cols[1].equals(officerNRIC)) {
+                    // Found the matching line, update the status
+                    cols[5] = HDBOfficer.RegistrationStatus.APPROVED.toString();
+                    cols[6] = projectName;
+                    updatedLines.add(String.join("\t", cols));
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+    
+            Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("Officer updated successfully.");
+            return true;
+        } catch (Exception e) {
+            System.out.println("Exception occurred: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
    
     public boolean updateProjectOfficer(String projectName, String officerNRIC, String officerName, boolean isAssigning) {
         try {
@@ -510,7 +548,9 @@ public class FileManager {
             Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Project updated successfully");
             
-            return true;
+            updateOfficerInProject(projectName, officerNRIC, isAssigning);
+            
+            return false;
         } catch (Exception e) {
             System.out.println("Exception occurred: " + e.getMessage());
             e.printStackTrace();
