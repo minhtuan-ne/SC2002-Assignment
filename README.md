@@ -37,11 +37,11 @@ To better view the UML Diagram , join this link: https://drive.google.com/drive/
 1. Navigate to the project root directory:
 2. Compile the Java files:
    ```sh
-   javac src/main/app/BTOApp.java
+   javac main/app/BTOApp.java
    ```
 3. Run the compiled program:
    ```sh
-   java -cp src main.app.BTOApp
+   java main.app.BTOApp
    ```
 
 ## Contributors
