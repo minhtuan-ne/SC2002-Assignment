@@ -4,20 +4,24 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 import main.models.*;
 import main.services.*;
+import main.util.FileManager;
 
 public class ManagerHandler implements IUserHandler {
     private final HDBManagerService managerSvc;
     private final EnquiryService enquirySvc;
     private final RegistrationService registrationSvc;
     private final ProjectService projectSvc;
+    private final FileManager fileManager;
 
-    public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService, ProjectService projectService) {
+    public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService, ProjectService projectService, FileManager fileManager) {
         this.managerSvc = managerService;
         this.enquirySvc = enquiryService;
         this.registrationSvc = registrationService;
         this.projectSvc = projectService;
+        this.fileManager = fileManager;
     }
 
     @Override
@@ -274,7 +278,9 @@ public class ManagerHandler implements IUserHandler {
                         }
 
                         System.out.println("Pending Registrations:");
-                        List<Registration> pending = registrationSvc.getRegistration(); 
+                        List<Registration> pending = registrationSvc.getRegistration().stream()
+                            .filter(r -> r.getProject() != null && r.getProject().getProjectName().equals(project.getProjectName()) && r.getStatus().equals(HDBOfficer.RegistrationStatus.PENDING))
+                            .collect(Collectors.toList());
                         if (pending.isEmpty()) {
                             System.out.println("  (none)");
                         } else {
@@ -332,7 +338,8 @@ public class ManagerHandler implements IUserHandler {
 
                     HDBOfficer selectedOfficer = pending.get(officerChoice - 1).getOfficer();
                     boolean success = registrationSvc.handleOfficerRegistration(me, project, selectedOfficer);
-                    if (success) {
+                    boolean assignSuccess = managerSvc.assignOfficerToProject(me, project, selectedOfficer);
+                    if (success && assignSuccess) {
                         System.out.println("Officer approved successfully.");
                     } else {
                         System.out.println("Approval failed.");
@@ -495,12 +502,22 @@ public class ManagerHandler implements IUserHandler {
                         break;
                     }
                     
+                    System.out.print("Do you approve this withdrawal? (yes/no): ");
+                    String approve = sc.nextLine();
+
                     // Process the withdrawal
-                    if(managerSvc.handleWithdrawal(me, foundApp)){
-                        System.out.println("Withdrawal processed successfully.");                        
+                    if(approve.equals("yes")){
+                        if(managerSvc.handleWithdrawal(me, foundApp)){
+                            System.out.println("Withdrawal processed successfully.");                        
+                        }
+                        else{
+                            System.out.println("Error while withdrawing.");
+                        }    
                     }
                     else{
-                        System.out.println("Error while withdrawing.");
+                        foundApp.setStatus(foundApp.getPrevStatus());
+                        foundApp.setPrevStatus("null");
+                        fileManager.updateApplication(nric, foundApp);
                     }
                     break;
                 }

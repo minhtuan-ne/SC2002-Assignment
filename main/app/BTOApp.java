@@ -35,7 +35,7 @@ public class BTOApp {
                     String role = user.getRole().toLowerCase();
                     Map<String, IUserHandler> roleHandlers = new HashMap<>();
                     roleHandlers.put("applicant", new ApplicantHandler(applicantSvc, enquirySvc, projectSvc, fileManager));
-                    roleHandlers.put("hdb manager", new ManagerHandler(managerSvc, enquirySvc, registrationSvc, projectSvc));
+                    roleHandlers.put("hdb manager", new ManagerHandler(managerSvc, enquirySvc, registrationSvc, projectSvc, fileManager));
                     roleHandlers.put("hdbofficer", new OfficerHandler(officerSvc, applicantSvc, enquirySvc, registrationSvc, projectSvc, auth, fileManager));
                     IUserHandler handler = roleHandlers.get(role);
                     if (handler != null) {

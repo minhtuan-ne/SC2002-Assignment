@@ -33,6 +33,7 @@ public class ApplicantService{
                 String projectName      = cols[1];
                 String type             = cols[2];
                 String status           = cols[3];
+                String prevStatus       = cols[4];
 
                 Applicant applicant = (Applicant) userMap.get(applicantNRIC);
                 if (applicant == null) {
@@ -40,7 +41,7 @@ public class ApplicantService{
                     continue;
                 }
 
-                Application app = new Application(applicant, projectName, type, status);
+                Application app = new Application(applicant, projectName, type, status, prevStatus);
                 applications.add(app);
             }
         } catch (IOException ex) {
@@ -100,7 +101,7 @@ public class ApplicantService{
 
     public boolean hasApplied(Applicant applicant) {
         for (Application a : applications) {
-            if (a.getApplicant().getNRIC().equals(applicant.getNRIC()) && !a.getStatus().equalsIgnoreCase("Unsuccessful")) {
+            if (a.getApplicant().getNRIC().equals(applicant.getNRIC()) && !a.getStatus().equalsIgnoreCase("Unsuccessful") && !a.getStatus().equalsIgnoreCase("Withdrawn") ) {
                 return true;
             }
         }
@@ -132,6 +133,9 @@ public class ApplicantService{
         }
 
         System.out.println("Status: " + app.getStatus());
+        if (app.getStatus().equals("Withdrawing")) {
+            System.out.println("Previous Status: " + app.getPrevStatus());
+        }
         System.out.println("Flat Type: " + app.getFlatType());
 
         DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
@@ -156,8 +160,9 @@ public class ApplicantService{
         }
 
         if (app.getStatus().equalsIgnoreCase("Pending") || app.getStatus().equalsIgnoreCase("Successful")) {
-            app.setStatus("Withdrawing");
-            fileManager.updateApplication(applicant.getNRIC(), "Withdrawing");
+            app.setPrevStatus(app.getStatus());
+            app.setStatus("Withdrawing");            
+            fileManager.updateApplication(applicant.getNRIC(),app);
             System.out.println("Withdrawal request submitted!");
             return true;
         }

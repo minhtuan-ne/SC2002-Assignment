@@ -51,14 +51,15 @@ public class OfficerHandler implements IUserHandler{
 
             // options
             System.out.println("1) Register to handle a project");
-            System.out.println("2) Cancel / remove my registration");
-            System.out.println("3) View details of my project");
-            System.out.println("4) View enquiries for my project");
-            System.out.println("5) Reply to an enquiry");
-            System.out.println("6) Book a flat for an applicant");
-            System.out.println("7) Generate booking receipt");
-            System.out.println("8) Switch to Applicant functions");
-            System.out.println("9) Change password");
+            System.out.println("2) View registered project");
+            System.out.println("3) Cancel / remove my registration");
+            System.out.println("4) View details of my project");
+            System.out.println("5) View enquiries for my project");
+            System.out.println("6) Reply to an enquiry");
+            System.out.println("7) Book a flat for an applicant");
+            System.out.println("8) Generate booking receipt");
+            System.out.println("9) Switch to Applicant functions");
+            System.out.println("10) Change password");
             System.out.println("0) Logout");
             System.out.print("> ");
             String choice = sc.nextLine().trim();
@@ -83,10 +84,56 @@ public class OfficerHandler implements IUserHandler{
                 }
 
                 case "2":
-                    registrationSvc.cancelRegistration(me);
+                    List<Registration> registrations = registrationSvc.getRegistration().stream()
+                    .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()))
+                    .collect(Collectors.toList());
+
+                    if (registrations.isEmpty()) {
+                        System.out.println("You have no registrations.");
+                    } else {
+                        System.out.println("Your Registrations:");
+                        for (Registration r : registrations) {
+                            System.out.println("----------------------------------");
+                            System.out.println("Project Name: " + r.getProject().getProjectName());
+                            System.out.println("Registration Status: " + r.getStatus());
+                        }
+                    }
                     break;
 
-                case "3": {
+                case "3":
+                    List<Registration> myRegs = registrationSvc.getRegistration().stream()
+                        .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()))
+                        .collect(Collectors.toList());
+                
+                    if (myRegs.isEmpty()) {
+                        System.out.println("You have no registrations to cancel.");
+                        break;
+                    }
+                
+                    System.out.println("Select a registration to cancel:");
+                    for (int i = 0; i < myRegs.size(); i++) {
+                        Registration r = myRegs.get(i);
+                        System.out.printf("  [%d] %s (Status: %s)\n", i + 1, r.getProject().getProjectName(), r.getStatus());
+                    }
+                
+                    System.out.print("Enter number: ");
+                    int ch = -1;
+                    try {
+                        ch = Integer.parseInt(sc.nextLine());
+                        if (ch < 1 || ch > myRegs.size()) {
+                            System.out.println("Invalid selection.");
+                            break;
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("Invalid input.");
+                        break;
+                    }
+                
+                    Registration selected = myRegs.get(ch - 1);
+                    registrationSvc.cancelRegistration(me, selected.getProject().getProjectName());
+                    break;
+
+                case "4": {
                     BTOProject p = svc.viewHandledProject(me);
                     if (p == null) {
                         System.out.println("You are not handling any project.");
@@ -101,7 +148,7 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                case "4": {
+                case "5": {
                     List<Enquiry> all = enquirySvc.getAllEnquiries();
                     List<Enquiry> list = new ArrayList<>();
                     if (me.isHandlingProject()){
@@ -120,7 +167,7 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                case "5": {
+                case "6": {
                     System.out.print("Enquiry ID: ");
                     String id = sc.nextLine();
                     System.out.print("Reply message: ");
@@ -129,7 +176,7 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                case "6": {
+                case "7": {
                     if (!me.isHandlingProject()) {
                         System.out.println("You must be handling a project first.");
                         break;
@@ -192,18 +239,18 @@ public class OfficerHandler implements IUserHandler{
                     break;
                 }
 
-                case "7": {
+                case "8": {
                     System.out.print("Applicant NRIC: ");
                     String aNric = sc.nextLine();
                     svc.generateReceipt(aNric);
                     break;
                 }
 
-                case "8":
+                case "9":
                     new ApplicantHandler(applicantSvc, enquirySvc, projectSvc, fileManager).run(me, sc);
                     break;
 
-                case "9": {
+                case "10": {
                     System.out.print("Current password: ");
                     String oldP = sc.nextLine();
                     System.out.print("New password: ");

@@ -11,6 +11,7 @@ public class HDBOfficer extends Applicant {
                       int age, String maritalStatus, String password) {
         super(nric, name, age, maritalStatus, password);
         this.regStatus = RegistrationStatus.NONE;
+        this.handlingProjectId = null;
     }
 
     public boolean isRegistrationPending() { return regStatus == RegistrationStatus.PENDING; }

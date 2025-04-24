@@ -16,6 +16,7 @@ import main.models.Applicant;
 import main.models.Application;
 import main.models.HDBManager;
 import main.models.HDBOfficer;
+import main.models.Registration;
 import main.models.User;
 
 public class FileManager {
@@ -272,7 +273,7 @@ public class FileManager {
             
             // If file is empty or doesn't exist, add header
             if (lines.isEmpty()) {
-                lines.add("Applicant\tProject name\tType 1\tStatus");
+                lines.add("Applicant\tProject name\tType\tStatus\tPrevStatus");
             }
             
             // Create a application line
@@ -281,17 +282,18 @@ public class FileManager {
             newApplication.append(app.getProjectName()).append("\t");
             newApplication.append(app.getFlatType()).append("\t");
             newApplication.append(app.getStatus()).append("\t");
+            newApplication.append(app.getPrevStatus() == null ? "null": app.getPrevStatus()).append("\t");
             
             lines.add(newApplication.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Application saved successfully to file.");
         } catch (IOException e) {
-            System.out.println("Error saving project to file: " + e.getMessage());
+            System.out.println("Error saving application to file: " + e.getMessage());
             e.printStackTrace();
         }
     }
 
-    public void updateApplication(String nric, String newStatus) {
+    public void updateApplication(String nric, Application app) {
         try {
             Path path = Paths.get("data", "ApplicationList.txt");
             if (!Files.exists(path)) {
@@ -311,7 +313,8 @@ public class FileManager {
                 String[] cols = line.split("\\t");
                 if (cols.length >= 4 && cols[0].equals(nric)) {
                     // Found the matching line, update the status
-                    cols[3] = newStatus;
+                    cols[3] = app.getStatus();
+                    cols[4] = app.getPrevStatus();
                     updatedLines.add(String.join("\t", cols));
                 } else {
                     updatedLines.add(line);
@@ -322,6 +325,66 @@ public class FileManager {
             System.out.println("Application updated successfully.");
         } catch (IOException e) {
             System.out.println("Error updating application: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }    
+
+    public void saveRegistration(Registration regist){
+        try {
+            Path path = Paths.get("data", "RegistrationList.txt");
+            List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
+            
+            // If file is empty or doesn't exist, add header
+            if (lines.isEmpty()) {
+                lines.add("Officer\tProject name\tStatus");
+            }
+            
+            // Create a application line
+            StringBuilder newRegistration = new StringBuilder();
+            newRegistration.append(regist.getOfficer().getNRIC()).append("\t");
+            newRegistration.append(regist.getProject().getProjectName()).append("\t");
+            newRegistration.append(regist.getStatus()).append("\t");
+            
+            lines.add(newRegistration.toString());
+            Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("Registration saved successfully to file.");
+        } catch (IOException e) {
+            System.out.println("Error saving registration to file: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    public void updateRegistration(String nric, String projectName, HDBOfficer.RegistrationStatus newStatus) {
+        try {
+            Path path = Paths.get("data", "RegistrationList.txt");
+            if (!Files.exists(path)) {
+                System.out.println("RegistrationList.txt not found.");
+                return;
+            }
+    
+            List<String> lines = Files.readAllLines(path);
+            List<String> updatedLines = new ArrayList<>();
+    
+            for (String line : lines) {
+                if (line.startsWith("Officer") || line.isBlank()) {
+                    updatedLines.add(line);
+                    continue;
+                }
+    
+                String[] cols = line.split("\\t");
+                if (cols.length >= 3 && cols[0].equals(nric) && cols[1].equals(projectName)) {
+                    // Found the matching line, update the status
+                    cols[2] = newStatus.toString();
+                    updatedLines.add(String.join("\t", cols));
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+    
+            Files.write(path, updatedLines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            System.out.println("Registration updated successfully.");
+        } catch (IOException e) {
+            System.out.println("Error updating registration: " + e.getMessage());
             e.printStackTrace();
         }
     }    

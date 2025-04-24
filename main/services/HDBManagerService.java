@@ -198,7 +198,8 @@ public class HDBManagerService {
                     project.setUnits(flatType, current + 1);
                 }
                 application.setStatus("Withdrawn");
-                fileManager.updateApplication(application.getApplicant().getNRIC(), "Withdrawn");
+                application.setPrevStatus("null");
+                fileManager.updateApplication(application.getApplicant().getNRIC(), application);
                 return true;
             }
         }
