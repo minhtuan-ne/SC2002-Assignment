@@ -15,7 +15,6 @@ import main.util.FileManager;
  * Service class to handle applicant-related operations such as applying for a project,
  * viewing applications, withdrawing, and listing available projects.
  * 
- * 
  */
 public class ApplicantService {
 
@@ -256,4 +255,5 @@ public class ApplicantService {
         return result;
     }
 }
+
 
