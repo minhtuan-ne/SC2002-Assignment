@@ -1,4 +1,4 @@
 Name	NRIC	Age	Marital Status	Password	RegStatus	HandlingProjectID
 Daniel	T2109876H	36	Single	password	NONE	null
 Emily	S6543210I	28	Single	password	APPROVED	Acacia Breeze
-David	T1234567J	29	Married	password	NONE	null
+David	T1234567J	29	Married	password	PENDING	Acacia Breeze

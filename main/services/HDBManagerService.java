@@ -267,8 +267,6 @@ public class HDBManagerService {
     public boolean assignOfficerToProject(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (project.getManager().getNRIC().equals(manager.getNRIC())) {
             project.addOfficer(officer);
-            String officerName = getOfficerNameByNRIC(officer.getNRIC());
-            fileManager.updateProjectOfficer(project.getProjectName(), officer.getNRIC(), officerName, true);
             return true;
         }
         return false;

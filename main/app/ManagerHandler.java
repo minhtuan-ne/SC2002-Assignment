@@ -311,62 +311,26 @@ public class ManagerHandler implements IUserHandler {
                         System.out.println("You have no projects to toggle visibility.");
                         break;
                     }
-                    
+
                     System.out.println("Select a project to toggle visibility:");
                     for (int i = 0; i < myProjects.size(); i++) {
-                        System.out.printf("%d) %s (currently %s)%n", i + 1, 
-                                myProjects.get(i).getProjectName(), 
+                        System.out.printf("%d) %s (currently %s)%n", i + 1,
+                                myProjects.get(i).getProjectName(),
                                 myProjects.get(i).isVisible() ? "visible" : "hidden");
                     }
-                    
+
                     System.out.print("> ");
                     int projChoice = Integer.parseInt(sc.nextLine());
                     if (projChoice < 1 || projChoice > myProjects.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    
+
                     BTOProject selected = myProjects.get(projChoice - 1);
-
-                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                    LocalDate startLocal = selected.getStartDate().toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();                        
-                    LocalDate endLocal = selected.getEndDate().toInstant()
-                        .atZone(ZoneId.systemDefault())
-                        .toLocalDate();        
-                    List<BTOProject> createdProjects = managerSvc.viewOwnProjects(me);
-                    boolean overlap = false;
                     boolean newVisibility = !selected.isVisible();
-
-                    if(newVisibility){
-                        for (BTOProject project : createdProjects) {
-                            if(project.getProjectName().equals(selected.getProjectName()));
-                            LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                            LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-    
-                            if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
-                                if(project.isVisible()){
-                                    System.out.printf("Project overlaps with: %s (%s to %s)\n", 
-                                        project.getProjectName(),
-                                        existingStart.format(fmt),
-                                        existingEnd.format(fmt)
-                                    );
-                                    overlap = true;
-                                    break;
-                                }
-                            }
-                        }    
-                    }
-
-                    if (overlap) {
-                        System.out.println("Cannot update project visibility. The date range overlaps with another project.");
-                        break;
-                    }
-
                     managerSvc.toggleVisibility(me, selected, newVisibility);
                     try {
-                        fileManager.updateProjectVisibility(newVisibility);
+                        fileManager.updateProjectVisibility(selected.getProjectName(), newVisibility);
                     } catch (Exception e) {}
                     System.out.printf("Project is now %s.%n", newVisibility ? "visible" : "hidden");
                     break;
@@ -455,8 +419,7 @@ public class ManagerHandler implements IUserHandler {
 
                     HDBOfficer selectedOfficer = pending.get(officerChoice - 1).getOfficer();
                     boolean success = registrationSvc.handleOfficerRegistration(me, project, selectedOfficer);
-                    boolean assignSuccess = managerSvc.assignOfficerToProject(me, project, selectedOfficer);
-                    if (success && assignSuccess) {
+                    if (success) {
                         System.out.println("Officer approved successfully.");
                     } else {
                         System.out.println("Approval failed.");
