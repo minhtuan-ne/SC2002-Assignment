@@ -341,10 +341,12 @@ public class FileManager {
                     continue;
                 }
                 String[] cols = line.split("\t");
-                if (cols.length >= 4 && cols[0].equals(nric) && cols[3].equals("Pending")) {
-                    cols[3] = app.getStatus();
-                    cols[4] = app.getPrevStatus();
-                    updatedLines.add(String.join("\t", cols));
+                if (cols.length >= 4 && cols[0].equals(nric)) {
+                    if(!app.getStatus().equals("Withdrawn")){
+                        cols[3] = app.getStatus();
+                        cols[4] = app.getPrevStatus();
+                        updatedLines.add(String.join("\t", cols));    
+                    }
                 } else {
                     updatedLines.add(line);
                 }

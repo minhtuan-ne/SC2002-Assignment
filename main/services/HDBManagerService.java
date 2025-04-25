@@ -254,10 +254,10 @@ public class HDBManagerService {
      * @param filter flat type filter (e.g., "2-room")
      */
     public void bookingReport(HDBManager manager, String filter) {
-        List<BTOProject> all = manager.getProjects();
+        List<BTOProject> all = viewOwnProjects(manager);
         for (BTOProject project : all) {
             for (Application application : projectSvc.getApplicationByProject(project)) {
-                if ("Booked".equalsIgnoreCase(application.getStatus())
+                if (application.getStatus().equalsIgnoreCase("Booked")
                     && filter.equalsIgnoreCase(application.getFlatType())) {
                     System.out.println("Applicant: " + application.getApplicant().getNRIC()
                         + ", Flat type: " + application.getFlatType()
