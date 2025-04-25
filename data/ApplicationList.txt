@@ -1,2 +1,2 @@
 Applicant	Project name	Type	Status	PrevStatus
-S1234567A	Acacia Breeze	2-room	Booked	Successful
+S1234567A	Acacia Breeze	2-room	Withdrawn	null
