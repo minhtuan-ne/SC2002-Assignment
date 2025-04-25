@@ -1,7 +1,4 @@
 Project Name	Neighborhood	Type 1	Number of units for Type 1	Selling price for Type 1	Type 2	Number of units for Type 2	Selling price for Type 2	Application opening date	Application closing date	Manager	Officer Slot	Officer	Visibility 
 Acacia Breeze	Yishun	2-Room	2	350000	3-Room	3	450000	15/02/2025	20/03/2026	Jessica	2	Emily	true
-Narue	hood	2-Room	2	350000	3-Room	4	450000	12/05/2025	16/06/2025	Michael	10	NULL	true		
-Test	Hood	2-Room	4	350000	3-Room	5	450000	16/02/2025	19/03/2026	Jessica	10	NULL	true	
-Avocado	do	2-Room	4	350000	3-Room	8	450000	15/08/2090	12/09/2090	Jessica	10	NULL	false
-awdaw	dawdadwd	2-Room	4	350000	3-Room	5	450000	18/08/2028	19/07/2030	Jessica	10	NULL	false
-idk	idk	2-Room	5	350000	3-Room	4	450000	18/06/2018	17/09/2020	Jessica	10	NULL	true	
+Nanyang Height	Jurong	2-Room	2	350000	3-Room	4	450000	12/05/2025	16/06/2025	Michael	10	NULL	true
+Old Trafford	Manchester	2-Room	4	350000	3-Room	5	450000	16/02/2028	19/03/2029	Jessica	10	NULL	true
