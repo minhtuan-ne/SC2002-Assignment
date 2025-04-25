@@ -182,6 +182,7 @@ public class RegistrationService {
 
         // Update the project file with the new officer assignment
         fileManager.updateRegistration(officer.getNRIC(), project.getProjectName(), RegistrationStatus.APPROVED);
+        fileManager.updateOfficerInProject(project.getProjectName(), officer.getNRIC(), true);
         registrations.removeIf(r -> r.getOfficer().getNRIC().equalsIgnoreCase(officer.getNRIC()));
         project.addOfficer(officer);
         System.out.println("Officer registration approved.");

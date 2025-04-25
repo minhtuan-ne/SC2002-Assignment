@@ -153,26 +153,12 @@ public class ApplicantHandler implements IUserHandler {
                 case "5": {
                     // 1) get only those projects currently open & visible
                     List<BTOProject> available = svc.viewAvailableProjects(me, psvc.getAllProjects());
-                    // Add applied project
-                    BTOProject applied = svc.viewAppliedProject(me, psvc.getAllProjects());
-                    List<BTOProject> merged = new ArrayList<>(available);
-                    if (applied != null && !available.contains(applied)) {
-                        boolean alreadyInAvailable = available.stream()
-                            .anyMatch(p -> p.getProjectName().equalsIgnoreCase(applied.getProjectName()));
-                        
-                        if (!alreadyInAvailable) {
-                            merged.add(applied);
-                        }
-                    }
-                    if (merged.isEmpty()) {
-                        System.out.println("No projects available to submit an enquiry at the moment.");
-                        break;
-                    }
+                    
 
                     // 2) list them out
                     System.out.println("\n-- Available Projects --");
-                    for (int i = 0; i < merged.size(); i++) {
-                        BTOProject p = merged.get(i);
+                    for (int i = 0; i < available.size(); i++) {
+                        BTOProject p = available.get(i);
                         System.out.printf("%d) %s - %s%n",
                             i + 1,
                             p.getProjectName(),
@@ -187,11 +173,11 @@ public class ApplicantHandler implements IUserHandler {
                         System.out.println("Enquiry cancelled.");
                         break;
                     }
-                    if (projChoice < 1 || projChoice > merged.size()) {
+                    if (projChoice < 1 || projChoice > available.size()) {
                         System.out.println("Invalid selection.");
                         break;
                     }
-                    BTOProject selected = merged.get(projChoice - 1);
+                    BTOProject selected = available.get(projChoice - 1);
 
                     // 4) ask for the message
                     System.out.print("Message: ");
