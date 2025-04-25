@@ -204,16 +204,16 @@ public class ApplicantService {
             return false;
         }
 
-        if (app.getStatus().equalsIgnoreCase("Pending") || app.getStatus().equalsIgnoreCase("Successful")) {
-            app.setPrevStatus(app.getStatus());
-            app.setStatus("Withdrawing");
-            fileManager.updateApplication(applicant.getNRIC(), app);
-            System.out.println("Withdrawal request submitted!");
-            return true;
+        if (app.getStatus().equalsIgnoreCase("Withdrawing") || app.getStatus().equalsIgnoreCase("Unsuccessful")) {
+            System.out.println("Cannot withdraw application in current state: " + app.getStatus());
+            return false;    
         }
 
-        System.out.println("Cannot withdraw application in current state: " + app.getStatus());
-        return false;
+        app.setPrevStatus(app.getStatus());
+        app.setStatus("Withdrawing");
+        fileManager.updateApplication(applicant.getNRIC(), app);
+        System.out.println("Withdrawal request submitted!");
+        return true;
     }
 
     /**

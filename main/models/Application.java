@@ -91,6 +91,7 @@ public class Application {
      */
     public void setStatus(String status) {
         this.prevStatus = this.status;
+        this.status = status;
     }
 
     /**
@@ -99,5 +100,6 @@ public class Application {
      * @param status the status to store as previous
      */
     public void setPrevStatus(String status) {
+        this.prevStatus = status;
     }
 }

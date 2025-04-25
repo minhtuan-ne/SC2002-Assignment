@@ -53,6 +53,7 @@ public class ProjectService {
                 int u1 = Integer.parseInt(cols[3]);
                 int u2 = Integer.parseInt(cols[6]);
                 int maxOfficers = Integer.parseInt(cols[11]);
+                boolean vis = Boolean.parseBoolean(cols[13]);
 
                 LocalDate sLd = LocalDate.parse(cols[8], fmt);
                 LocalDate eLd = LocalDate.parse(cols[9], fmt);
@@ -94,7 +95,7 @@ public class ProjectService {
                     o.setRegStatus(HDBOfficer.RegistrationStatus.APPROVED);
                 });
                 BTOProject project = new BTOProject(manager, projName, neighborhood, sd, ed, flats, maxOfficers,
-                        officers);
+                        officers, vis);
 
                 projects.add(project);
                 manager.addProject(project);

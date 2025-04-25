@@ -34,6 +34,20 @@ public class BTOProject {
      */
     public BTOProject(HDBManager manager, String projectName, String neighborhood,
                       Date startDate, Date endDate, List<Flat> flats,
+                      int maxOfficers, List<HDBOfficer> assignedOfficer, boolean visibility) {
+        this.manager = manager;
+        this.projectName = projectName;
+        this.neighborhood = neighborhood;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.flats = flats;
+        this.maxOfficers = maxOfficers;
+        this.visibility = visibility;
+        this.officers = assignedOfficer;
+    }
+
+    public BTOProject(HDBManager manager, String projectName, String neighborhood,
+                      Date startDate, Date endDate, List<Flat> flats,
                       int maxOfficers, List<HDBOfficer> assignedOfficer) {
         this.manager = manager;
         this.projectName = projectName;
@@ -199,5 +213,9 @@ public class BTOProject {
      */
     public void removeOfficer(HDBOfficer officer) {
         this.officers.remove(officer);
+    }
+
+    public void removeOfficerByNRIC(String nric){
+        this.officers.removeIf(o -> o.getNRIC().equals(nric));
     }
 }

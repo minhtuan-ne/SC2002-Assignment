@@ -199,7 +199,7 @@ public class FileManager {
     public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood,
                                Date startDate, Date endDate,
                                int twoRoomUnits, int threeRoomUnits,
-                               int twoRoomPrice, int threeRoomPrice, int maxOfficers) {
+                               int twoRoomPrice, int threeRoomPrice, int maxOfficers, boolean vis) {
         try {
             Path path = Paths.get("data", "ProjectList.txt");
             List<String> lines = Files.exists(path) ? Files.readAllLines(path) : new ArrayList<>();
@@ -232,6 +232,7 @@ public class FileManager {
             newProject.append(managerName).append("\t");
             newProject.append(maxOfficers).append("\t");
             newProject.append("NULL").append("\t");
+            newProject.append(vis).append("\t");
             lines.add(newProject.toString());
             Files.write(path, lines, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             System.out.println("Project saved successfully to file.");
@@ -340,7 +341,7 @@ public class FileManager {
                     continue;
                 }
                 String[] cols = line.split("\t");
-                if (cols.length >= 4 && cols[0].equals(nric)) {
+                if (cols.length >= 4 && cols[0].equals(nric) && cols[3].equals("Pending")) {
                     cols[3] = app.getStatus();
                     cols[4] = app.getPrevStatus();
                     updatedLines.add(String.join("\t", cols));

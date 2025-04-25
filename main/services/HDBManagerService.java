@@ -73,7 +73,8 @@ public class HDBManagerService {
             threeRoomUnits,
             twoRoomPrice,
             threeRoomPrice,
-            10
+            10,
+            true
         );
 
         return true;
@@ -198,22 +199,19 @@ public class HDBManagerService {
             }
         }
 
-        if (matchingProject == null || !matchingProject.getManager().getNRIC().equals(manager.getNRIC())) {
-            return false;
-        }
-
         if (approve) {
             String flatType = application.getFlatType();
             int available = matchingProject.getUnits(flatType);
             if (available > 0) {
                 application.setStatus("Successful");
-                matchingProject.setUnits(flatType, available - 1);
+                fileManager.updateApplication(application.getApplicant().getNRIC(), application);                
                 return true;
             } else {
                 return false;
             }
         } else {
             application.setStatus("Unsuccessful");
+            fileManager.updateApplication(application.getApplicant().getNRIC(), application);                
             return true;
         }
     }
@@ -229,8 +227,8 @@ public class HDBManagerService {
         String projectName = application.getProjectName();
         for (BTOProject project : projectSvc.getAllProjects()) {
             if (project.getProjectName().equalsIgnoreCase(projectName)) {
-                String status = application.getStatus();
-                if ("Successful".equalsIgnoreCase(status) || "Booked".equalsIgnoreCase(status)) {
+                String status = application.getPrevStatus();
+                if (status.equalsIgnoreCase("Booked")) {
                     String flatType = application.getFlatType();
                     int current = project.getUnits(flatType);
                     project.setUnits(flatType, current + 1);
@@ -238,6 +236,11 @@ public class HDBManagerService {
                 application.setStatus("Withdrawn");
                 application.setPrevStatus("null");
                 fileManager.updateApplication(application.getApplicant().getNRIC(), application);
+                try {
+                    fileManager.updateProject(project.getProjectName(), project.getProjectName(), project.getNeighborhood(), project.getStartDate(), project.getEndDate(), project.getUnits("2-room"), project.getUnits("3-room"));
+                } catch (Exception e) {
+                    System.out.println("Update project failed");
+                }
                 return true;
             }
         }

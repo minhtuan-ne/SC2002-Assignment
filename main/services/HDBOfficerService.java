@@ -52,7 +52,7 @@ public class HDBOfficerService {
     public boolean bookFlat(String applicantNric, String flatType) {
         Application app = applicantSvc.getApplication(applicantNric);
         if (app == null || !"Successful".equalsIgnoreCase(app.getStatus())) {
-            System.out.println("Booking rejected – application not in Successful state.");
+            System.out.println("Booking rejected - application not in Successful state.");
             return false;
         }
 

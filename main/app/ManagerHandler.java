@@ -92,20 +92,22 @@ public class ManagerHandler implements IUserHandler {
                     DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
                     LocalDate startLocal = LocalDate.parse(startDateStr, fmt);
                     LocalDate endLocal = LocalDate.parse(endDateStr, fmt);
-                    List<BTOProject> createdProjects = me.getProjects();
+                    List<BTOProject> createdProjects = managerSvc.viewOwnProjects(me);
                     boolean overlap = false;
                     for (BTOProject project : createdProjects) {
                         LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
                         LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
                         if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
-                            System.out.printf("Project overlaps with: %s (%s to %s)\n", 
-                                project.getProjectName(),
-                                existingStart.format(fmt),
-                                existingEnd.format(fmt)
-                            );
-                            overlap = true;
-                            break;
+                            if(project.isVisible()){
+                                System.out.printf("Project overlaps with: %s (%s to %s)\n", 
+                                    project.getProjectName(),
+                                    existingStart.format(fmt),
+                                    existingEnd.format(fmt)
+                                );
+                                overlap = true;
+                                break;
+                            }
                         }
                     }
 
@@ -378,7 +380,9 @@ public class ManagerHandler implements IUserHandler {
                     }
 
                     BTOProject project = myProjects.get(projChoice - 1);
-                    List<Registration> pending = registrationSvc.getRegistration();
+                    List<Registration> pending = registrationSvc.getRegistration().stream()
+                            .filter(r -> r.getProject() != null && r.getProject().getProjectName().equals(project.getProjectName()) && r.getStatus().equals(HDBOfficer.RegistrationStatus.PENDING))
+                            .collect(Collectors.toList());
 
                     if (pending.isEmpty()) {
                         System.out.println("No pending officer registrations.");

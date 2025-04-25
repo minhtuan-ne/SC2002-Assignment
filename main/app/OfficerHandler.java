@@ -279,6 +279,16 @@ public class OfficerHandler implements IUserHandler{
                 
                     // 4) delegate to service – it already validates state & units
                     svc.bookFlat(applicantNric, flatType);
+                    fileManager.updateApplication(applicantNric, chosen);
+                    BTOProject project = projectSvc.getAllProjects().stream()
+                        .filter(p -> p.getProjectName().equals(chosen.getProjectName()))
+                        .findFirst()
+                        .orElse(null);
+                    try {
+                        fileManager.updateProject(project.getProjectName(), project.getProjectName(), project.getNeighborhood(), project.getStartDate(), project.getEndDate(), project.getUnits("2-room"), project.getUnits("3-room"));
+                    } catch (Exception e) {
+                        System.out.println("Update project failed");
+                    }
                     break;
                 }
 

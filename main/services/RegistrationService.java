@@ -141,9 +141,12 @@ public class RegistrationService {
             officer.setRegStatus(HDBOfficer.RegistrationStatus.NONE);
             fileManager.updateRegistration(officer.getNRIC(), projectName, RegistrationStatus.NONE);
             fileManager.updateOfficerInProject(projectName, officer.getNRIC(), false);
+            BTOProject project = projectSvc.getAllProjects().stream()
+                .filter(p -> p.getProjectName().equals(projectName)).findFirst().orElse(null);
             Registration registered = getRegistrationByOfficer(officer, projectName);
             registered.setStatus(RegistrationStatus.NONE);
-            
+            project.removeOfficerByNRIC(officer.getNRIC());
+
             System.out.println("Registration removed.");
         }
     }
