@@ -198,22 +198,19 @@ public class HDBManagerService {
             }
         }
 
-        if (matchingProject == null || !matchingProject.getManager().getNRIC().equals(manager.getNRIC())) {
-            return false;
-        }
-
         if (approve) {
             String flatType = application.getFlatType();
             int available = matchingProject.getUnits(flatType);
             if (available > 0) {
                 application.setStatus("Successful");
-                matchingProject.setUnits(flatType, available - 1);
+                fileManager.updateApplication(application.getApplicant().getNRIC(), application);                
                 return true;
             } else {
                 return false;
             }
         } else {
             application.setStatus("Unsuccessful");
+            fileManager.updateApplication(application.getApplicant().getNRIC(), application);                
             return true;
         }
     }
