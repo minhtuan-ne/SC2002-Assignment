@@ -615,6 +615,41 @@ public class FileManager {
         return true;
     }
 
+    public void updateProjectVisibility(boolean visibility) throws IOException{
+        Path path = Paths.get("./data/ProjectList.txt");
+        if (!Files.exists(path)) {
+            System.out.println("Project file not found at: " + path.toAbsolutePath());
+            return;
+        }
+        List<String> lines = Files.readAllLines(path);
+        if (lines.isEmpty()) {
+            System.out.println("Project file is empty.");
+            return;
+        }
+        boolean projectFound = false;
+        for (int i = 1; i < lines.size(); i++) {
+            String[] cols = lines.get(i).split("\t");
+            if (cols.length > 0 && cols[0].equalsIgnoreCase(cols[0])) {
+                projectFound = true;
+                StringBuilder updatedLine = new StringBuilder();
+                for (int j = 0; j < cols.length-1; j++) {
+                    updatedLine.append(cols[j]);
+                    if (j < cols.length - 1) updatedLine.append("\t");
+                }
+                updatedLine.append(visibility);
+                lines.set(i, updatedLine.toString());
+                System.out.println("Found and updating project: " + cols[0]);
+                break;
+            }
+        }
+        if (!projectFound) {
+            System.out.println("Project not found");
+            return;
+        }
+        Files.write(path, lines, StandardOpenOption.TRUNCATE_EXISTING);
+        System.out.println("Project file updated successfully at: " + path.toAbsolutePath());
+    }
+
     /**
      * Deletes a project from the file based on name.
      *

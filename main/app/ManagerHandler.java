@@ -319,8 +319,43 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     BTOProject selected = myProjects.get(projChoice - 1);
+
+                    DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                    LocalDate startLocal = selected.getStartDate().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();                        
+                    LocalDate endLocal = selected.getEndDate().toInstant()
+                        .atZone(ZoneId.systemDefault())
+                        .toLocalDate();        
+                    List<BTOProject> createdProjects = managerSvc.viewOwnProjects(me);
+                    boolean overlap = false;
+                    for (BTOProject project : createdProjects) {
+                        LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                        LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+
+                        if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
+                            if(project.isVisible()){
+                                System.out.printf("Project overlaps with: %s (%s to %s)\n", 
+                                    project.getProjectName(),
+                                    existingStart.format(fmt),
+                                    existingEnd.format(fmt)
+                                );
+                                overlap = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (overlap) {
+                        System.out.println("Cannot update project visibility. The date range overlaps with another project.");
+                        break;
+                    }
+
                     boolean newVisibility = !selected.isVisible();
                     managerSvc.toggleVisibility(me, selected, newVisibility);
+                    try {
+                        fileManager.updateProjectVisibility(newVisibility);
+                    } catch (Exception e) {}
                     System.out.printf("Project is now %s.%n", newVisibility ? "visible" : "hidden");
                     break;
                 }
