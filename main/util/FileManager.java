@@ -100,8 +100,8 @@ public class FileManager {
     public void updatePassword(String role, String nric, String newPassword) throws IOException {
         String fileName = switch (role.toLowerCase()) {
             case "applicant" -> "ApplicantList.txt";
-            case "manager"   -> "ManagerList.txt";
-            case "officer"   -> "OfficerList.txt";
+            case "hdb manager"   -> "ManagerList.txt";
+            case "hdbofficer"   -> "OfficerList.txt";
             default           -> throw new IllegalArgumentException("Unknown role: " + role);
         };
         Path path = Paths.get("data", fileName);
