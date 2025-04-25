@@ -442,7 +442,8 @@ public class FileManager {
                 }
                 String[] cols = line.split("\t");
                 if (cols.length >= 6 && cols[1].equals(officerNRIC)) {
-                    cols[5] = HDBOfficer.RegistrationStatus.APPROVED.toString();
+                    // Found the matching line, update the status
+                    cols[5] = isAssigning ? HDBOfficer.RegistrationStatus.APPROVED.toString() : HDBOfficer.RegistrationStatus.NONE.toString();
                     cols[6] = projectName;
                     updatedLines.add(String.join("\t", cols));
                 } else {
