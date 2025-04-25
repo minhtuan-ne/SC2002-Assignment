@@ -13,34 +13,47 @@ import main.models.*;
 import main.models.HDBOfficer.RegistrationStatus;
 import main.util.FileManager;
 
+/**
+ * Handles officer registration for BTO projects, including approval,
+ * cancellation, and file updates.
+ */
 public class RegistrationService {
     private final List<Registration> registrations;
     private final ApplicantService applicantSvc;
     private final ProjectService projectSvc;
     private final FileManager fileManager;
 
-    public RegistrationService(ApplicantService applicantService, ProjectService projectService, FileManager fileManager){
+    /**
+     * Constructs the registration service and loads existing registrations from
+     * file.
+     *
+     * @param applicantService service to check officer applications
+     * @param projectService   service for project retrieval
+     * @param fileManager      file I/O manager
+     */
+    public RegistrationService(ApplicantService applicantService, ProjectService projectService,
+            FileManager fileManager) {
         this.registrations = new ArrayList<>();
         this.applicantSvc = applicantService;
         this.projectSvc = projectService;
         this.fileManager = fileManager;
-        try{
+        try {
             Path path = Paths.get("data", "RegistrationList.txt");
             List<String> lines = Files.readAllLines(path).stream()
-                .filter(l -> !l.startsWith("Officer") && !l.isBlank())
-                .collect(Collectors.toList());
+                    .filter(l -> !l.startsWith("Officer") && !l.isBlank())
+                    .collect(Collectors.toList());
             List<User> users = fileManager.loadAllUser();
             Map<String, User> userMap = users.stream()
-                .collect(Collectors.toMap(User::getNRIC, u -> u));
+                    .collect(Collectors.toMap(User::getNRIC, u -> u));
 
             List<BTOProject> allProjects = projectSvc.getAllProjects();
 
             for (String line : lines) {
                 String[] cols = line.split("\\t");
 
-                String applicantNRIC    = cols[0];
-                String projectName      = cols[1];
-                String status           = cols[2];
+                String applicantNRIC = cols[0];
+                String projectName = cols[1];
+                String status = cols[2];
 
                 HDBOfficer officer = (HDBOfficer) userMap.get(applicantNRIC);
                 if (officer == null) {
@@ -49,11 +62,12 @@ public class RegistrationService {
                 }
 
                 BTOProject matchedProject = allProjects.stream()
-                    .filter(p -> p.getProjectName().equals(projectName))
-                    .findFirst()
-                    .orElse(null);
+                        .filter(p -> p.getProjectName().equals(projectName))
+                        .findFirst()
+                        .orElse(null);
 
-                Registration regist = new Registration(officer, RegistrationStatus.valueOf(status.toUpperCase()), matchedProject);
+                Registration regist = new Registration(officer, RegistrationStatus.valueOf(status.toUpperCase()),
+                        matchedProject);
                 registrations.add(regist);
             }
         } catch (IOException ex) {
@@ -61,7 +75,14 @@ public class RegistrationService {
         }
     }
 
-    public boolean register(HDBOfficer officer, String projectId){
+    /**
+     * Submits a registration request for the given officer and project.
+     *
+     * @param officer   the officer requesting registration
+     * @param projectId the project name
+     * @return true if registration was accepted, false otherwise
+     */
+    public boolean register(HDBOfficer officer, String projectId) {
         // Find the target project
         BTOProject project = projectSvc.getProjectByName(projectId);
         if (project == null) {
@@ -88,7 +109,8 @@ public class RegistrationService {
         // Check if officer has applied for this project
         Application app = applicantSvc.getApplication(officer.getNRIC());
         if (app != null && app.getProjectName().equalsIgnoreCase(projectId)) {
-            System.out.println("You have already applied for this project as an applicant – cannot register as officer.");
+            System.out
+                    .println("You have already applied for this project as an applicant – cannot register as officer.");
             return false;
         }
 
@@ -101,7 +123,13 @@ public class RegistrationService {
         System.out.println("Request submitted - awaiting manager approval.");
         return true;
     }
-    
+
+    /**
+     * Cancels an officer’s registration for the specified project.
+     *
+     * @param officer     the officer to cancel
+     * @param projectName the project name
+     */
     public void cancelRegistration(HDBOfficer officer, String projectName) {
         if (officer.getRegStatus() == HDBOfficer.RegistrationStatus.NONE) {
             System.out.println("No active request / assignment to cancel.");
@@ -148,7 +176,7 @@ public class RegistrationService {
         if (!projectId.equalsIgnoreCase(officer.getHandlingProjectId()))
             throw new IllegalStateException("Project mismatch during approval");
         officer.setRegStatus(RegistrationStatus.APPROVED);
-        
+
         // Update the project file with the new officer assignment
         fileManager.updateRegistration(officer.getNRIC(), project.getProjectName(), RegistrationStatus.APPROVED);
         registrations.removeIf(r -> r.getOfficer().getNRIC().equalsIgnoreCase(officer.getNRIC()));
@@ -156,8 +184,13 @@ public class RegistrationService {
         System.out.println("Officer registration approved.");
         return true;
     }
-
-    public List<Registration> getRegistration(){
+    
+     /**
+     * Returns the list of all officer registration records.
+     *
+     * @return list of Registration objects
+     */
+    public List<Registration> getRegistration() {
         return registrations;
     }
 }

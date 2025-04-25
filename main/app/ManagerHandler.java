@@ -9,6 +9,10 @@ import main.models.*;
 import main.services.*;
 import main.util.FileManager;
 
+/**
+ * Handles all CLI interactions for an HDB Manager.
+ * Provides access to create, manage, and moderate BTO projects and registrations.
+ */
 public class ManagerHandler implements IUserHandler {
     private final HDBManagerService managerSvc;
     private final EnquiryService enquirySvc;
@@ -16,6 +20,15 @@ public class ManagerHandler implements IUserHandler {
     private final ProjectService projectSvc;
     private final FileManager fileManager;
 
+    /**
+     * Constructs a new ManagerHandler instance.
+     *
+     * @param managerService     manager-related logic service
+     * @param enquiryService     enquiry processing service
+     * @param registrationService officer registration handler
+     * @param projectService     project management service
+     * @param fileManager        file operations handler
+     */
     public ManagerHandler(HDBManagerService managerService, EnquiryService enquiryService, RegistrationService registrationService, ProjectService projectService, FileManager fileManager) {
         this.managerSvc = managerService;
         this.enquirySvc = enquiryService;
@@ -23,12 +36,24 @@ public class ManagerHandler implements IUserHandler {
         this.projectSvc = projectService;
         this.fileManager = fileManager;
     }
-
+    
+    /**
+     * Launches the manager's CLI interface loop.
+     *
+     * @param user the logged-in HDB manager
+     * @param sc   scanner for user input
+     */
     @Override
     public void run(User user, Scanner sc) {
         runManagerLoop((HDBManager) user, sc);
     }
-    //public void runManagerLoop(HDBManager me, HDBManagerService svc, RegistrationService rsvc, ApplicantService asvc, Scanner sc, EnquiryService iesvc) {
+    
+    /**
+     * Contains full logic for HDB Manager command handling.
+     *
+     * @param me the current logged-in HDB manager
+     * @param sc scanner for console input
+     */
     public void runManagerLoop(HDBManager me, Scanner sc) {
         while (true) {
             System.out.println("\n-- Manager Menu --");
@@ -88,7 +113,7 @@ public class ManagerHandler implements IUserHandler {
                         System.out.println("Cannot create project. The date range overlaps with another project.");
                         break;
                     }
-
+                    // Check whether the manager can create the project or not (overlapping time, still has visible project, etc.)
                     try {
                         Date startDate = Date.from(LocalDate.parse(startDateStr, fmt)
                                         .atStartOfDay(ZoneId.systemDefault()).toInstant());
@@ -190,15 +215,18 @@ public class ManagerHandler implements IUserHandler {
                     }
                     
                     BTOProject selected = myProjects.get(projChoice - 1);
-                    
+
+                    // Edit name
                     System.out.print("New project name (press Enter to keep current): ");
                     String name = sc.nextLine();
                     if (name.isEmpty()) name = selected.getProjectName();
                     
+                    // Edit location
                     System.out.print("New neighborhood (press Enter to keep current): ");
                     String neighborhood = sc.nextLine();
                     if (neighborhood.isEmpty()) neighborhood = selected.getNeighborhood();
-                    
+
+                    // Edit date
                     System.out.print("New start date (dd/MM/yyyy, press Enter to keep current): ");
                     String startDateStr = sc.nextLine();
                     Date startDate = selected.getStartDate();
@@ -220,6 +248,7 @@ public class ManagerHandler implements IUserHandler {
                         // If endDateStr is empty, we'll keep using the original endDate
                     }
                     
+                    // Edit units of each room
                     System.out.print("New 2-room units (press Enter to keep current): ");
                     String twoRoomStr = sc.nextLine();
                     int twoRoomUnits = selected.getUnits("2-room");
@@ -294,7 +323,7 @@ public class ManagerHandler implements IUserHandler {
                     break;
                 }
 
-                case "7": {
+                case "7": { // View pending officer registrations
                     List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects.");
@@ -329,7 +358,7 @@ public class ManagerHandler implements IUserHandler {
                     break;
                 }
 
-                case "8": {
+                case "8": { // Manage officer registration
                     List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
                         System.out.println("You have no projects to manage.");
@@ -472,7 +501,6 @@ public class ManagerHandler implements IUserHandler {
                     }
                 }
 
-                // Case 10: Process withdrawal request - Already works, just minor improvements
                 case "10": { // Process withdrawal request
                     List<BTOProject> myProjects = managerSvc.viewOwnProjects(me);
                     if (myProjects.isEmpty()) {
@@ -591,7 +619,6 @@ public class ManagerHandler implements IUserHandler {
                     break;
                 }
                 
-                // Case 13: Reply to enquiry - Modified to show enquiries first
                 case "13": { // Reply to enquiry
                     System.out.println("\n===== All Enquiries =====");
                     
@@ -620,13 +647,14 @@ public class ManagerHandler implements IUserHandler {
                     
                     Enquiry selected = allEnquiries.get(choice13 - 1);
                     
+                    // Reply
                     System.out.print("Reply message: ");
                     String reply = sc.nextLine();
                     
                     enquirySvc.replyToEnquiry(selected.getEnquiryId(), reply);
                     break;
                 }
-                case "14": {
+                case "14": { // Change password
                     System.out.print("Current password: ");
                     String oldP = sc.nextLine();
                     System.out.print("New password: ");
