@@ -161,9 +161,10 @@ public class ApplicantService {
 
     /**
      * Displays project details and status for the current applicant’s application.
-     * 
-     * @param applicant the user whose application to view
+     *
+     * @param applicant   the user whose application to view
      * @param allProjects list of all available projects
+     * @return the {@link BTOProject} the applicant applied for, or {@code null} if not found
      */
     public BTOProject viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
         Application app = getApplication(applicant.getNRIC());

@@ -194,6 +194,7 @@ public class FileManager {
      * @param twoRoomPrice   selling price for 2-room units
      * @param threeRoomPrice selling price for 3-room units
      * @param maxOfficers    maximum number of officers that can be assigned
+     * @param vis             visibility flag for the project (true = visible to applicants)
      * @return true if the project was written successfully; false otherwise
      */
     public boolean saveProject(String managerNRIC, String managerName, String projectName, String neighborhood,
@@ -614,7 +615,18 @@ public class FileManager {
         System.out.println("Project file updated successfully at: " + path.toAbsolutePath());
         return true;
     }
-
+    
+    /**
+     * Updates the visibility status of a specified BTO project in the ProjectList file.
+     * <p>
+     * The method searches for the project by name and updates its last column
+     * (assumed to represent visibility) to the provided value.
+     * </p>
+     *
+     * @param projectName the name of the project to update
+     * @param visibility  the new visibility status (true = visible, false = hidden)
+     * @throws IOException if an I/O error occurs while reading or writing the file
+     */
     public void updateProjectVisibility(String projectName, boolean visibility) throws IOException {
         Path path = Paths.get("./data/ProjectList.txt");
         if (!Files.exists(path)) {

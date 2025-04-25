@@ -151,6 +151,13 @@ public class RegistrationService {
         }
     }
 
+    /**
+     * Retrieves a registration entry for a given officer and project.
+     *
+     * @param officer     the officer whose registration is being queried
+     * @param projectName the name of the project associated with the registration
+     * @return the matching {@link Registration} object, or {@code null} if none found
+     */
     public Registration getRegistrationByOfficer(HDBOfficer officer, String projectName){
         return registrations.stream()
             .filter(r -> r.getOfficer().getNRIC().equals(officer.getNRIC()) && r.getProject().getProjectName().equals(projectName))
@@ -158,6 +165,19 @@ public class RegistrationService {
             .orElse(null);
     }
 
+    /**
+     * Handles the approval of an officer's registration to a BTO project.
+     * <p>
+     * This method performs validation checks, updates the officer’s registration status,
+     * modifies the associated project, and writes the changes to the file system.
+     * </p>
+     *
+     * @param manager the HDB manager performing the approval
+     * @param project the project to which the officer is registering
+     * @param officer the officer whose registration is to be approved
+     * @return {@code true} if registration is approved successfully, {@code false} otherwise
+     * @throws IllegalStateException if the officer's intended project does not match the given project
+     */
     public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
         if (!project.getManager().getNRIC().equalsIgnoreCase(manager.getNRIC())) {
             System.out.println("Wrong Manager.");

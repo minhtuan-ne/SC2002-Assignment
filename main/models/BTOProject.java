@@ -45,7 +45,18 @@ public class BTOProject {
         this.visibility = visibility;
         this.officers = assignedOfficer;
     }
-
+    /**
+     * Constructs a new {@code BTOProject} with default visibility set to {@code true}.
+     *
+     * @param manager         the HDB manager who created the project
+     * @param projectName     the name of the BTO project
+     * @param neighborhood    the location/neighborhood of the project
+     * @param startDate       the application start date
+     * @param endDate         the application end date
+     * @param flats           list of available flat types and their details
+     * @param maxOfficers     maximum number of officers allowed to handle the project
+     * @param assignedOfficer initial list of officers assigned to the project
+     */
     public BTOProject(HDBManager manager, String projectName, String neighborhood,
                       Date startDate, Date endDate, List<Flat> flats,
                       int maxOfficers, List<HDBOfficer> assignedOfficer) {
@@ -215,6 +226,11 @@ public class BTOProject {
         this.officers.remove(officer);
     }
 
+    /**
+     * Removes an officer from the project based on their NRIC.
+     *
+     * @param nric the NRIC of the officer to remove
+     */
     public void removeOfficerByNRIC(String nric){
         this.officers.removeIf(o -> o.getNRIC().equals(nric));
     }
