@@ -39,17 +39,67 @@ public class Application {
         this(applicant, projectName, flatType, "Pending", "null");
     }
 
-    public Applicant getApplicant() { return applicant; }
+    /**
+     * Returns the Applicant who submitted this application.
+     *
+     * @return the Applicant object
+     */
+    public Applicant getApplicant() {
+        return applicant;
+    }
 
-    public String getProjectName() { return projectName; }
+    /**
+     * Returns the name of the project applied for.
+     *
+     * @return project name as a String
+     */
+    public String getProjectName() {
+        return projectName;
+    }
 
-    public String getFlatType() { return flatType; }
+    /**
+     * Returns the flat type chosen.
+     *
+     * @return flat type (e.g., "2-Room")
+     */
+    public String getFlatType() {
+        return flatType;
+    }
 
-    public String getStatus() { return status; }
+    /**
+     * Returns the current status of this application.
+     *
+     * @return current status (e.g., "PENDING", "APPROVED" or "REJECTED")
+     */
+    public String getStatus() {
+        return status;
+    }
 
-    public String getPrevStatus() { return prevStatus; }
+    /**
+     * Returns the previous status before the current update.
+     *
+     * @return previous status, or null if none
+     */
+    public String getPrevStatus() {
+        return prevStatus;
+    }
 
-    public void setStatus(String status) { this.status = status; }
+    /**
+     * Updates the current status of the application, preserving the old status.
+     *
+     * @param status the new status to set
+     */
+    public void setStatus(String status) {
+        this.prevStatus = this.status;
+        this.status = Objects.requireNonNull(status, "status must not be null");
+    }
 
-    public void setPrevStatus(String status) { this.prevStatus = status; }
+    /**
+     * Sets the previous status explicitly (use with caution).
+     *
+     * @param status the status to store as previous
+     */
+    public void setPrevStatus(String status) {
+        this.prevStatus = Objects.requireNonNull(status, "prevStatus must not be null");
+    }
 }

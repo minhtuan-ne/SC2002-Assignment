@@ -6,12 +6,17 @@ package main.models;
  */
 public class HDBOfficer extends Applicant {
 
-    /**
-     * Enum representing the registration status of an officer.
-     */
-    public enum RegistrationStatus {
-        NONE, PENDING, APPROVED
-    }
+	/**
+	 * The registration status of a BTO application.
+	 */
+	public enum RegistrationStatus {
+	    /** No application has been made. */
+	    NONE,
+	    /** Application has been submitted and is pending approval. */
+	    PENDING,
+	    /** Application has been reviewed and approved. */
+	    APPROVED
+	}
 
     private String handlingProjectId;
     private RegistrationStatus regStatus;

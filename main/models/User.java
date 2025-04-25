@@ -36,19 +36,63 @@ public abstract class User {
         this.password = password;
     }
 
-    public String getNRIC() { return nric; }
+    /**
+     * Returns this user’s NRIC.
+     *
+     * @return the NRIC, in the format S/TxxxxxxxX
+     */
+    public String getNRIC() {
+        return nric;
+    }
 
-    public String getName() { return name; }
+    /**
+     * Returns this user’s full name.
+     *
+     * @return the user’s name
+     */
+    public String getName() {
+        return name;
+    }
 
-    public int getAge() { return age; }
+    /**
+     * Returns this user’s age.
+     *
+     * @return the user’s age in years
+     */
+    public int getAge() {
+        return age;
+    }
 
-    public String getMaritalStatus() { return maritalStatus; }
+    /**
+     * Returns this user’s marital status.
+     *
+     * @return either "Single" or "Married"
+     */
+    public String getMaritalStatus() {
+        return maritalStatus;
+    }
 
-    public String getPassword() { return this.password; }
+    /**
+     * Returns this user’s password.
+     * <p>
+     * <em>Note:</em> exposing raw passwords is not recommended in production.
+     *
+     * @return the current password
+     */
+    public String getPassword() {
+        return this.password;
+    }
 
+    /**
+     * Checks whether the provided password matches this user’s password.
+     *
+     * @param password the password to verify
+     * @return true if it matches; false otherwise
+     */
     public boolean checkPassword(String password) {
         return this.password.equals(password);
     }
+
 
     /**
      * Changes the password if the old one matches.
