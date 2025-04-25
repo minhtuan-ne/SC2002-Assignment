@@ -77,9 +77,17 @@ public class ManagerHandler implements IUserHandler {
 
             switch (choice) {
                 case "1": { // Create project
+                    List<BTOProject> allProjects = projectSvc.getAllProjects();
 
                     System.out.print("Project name: ");
                     String name = sc.nextLine();
+
+                    boolean checkSameName = allProjects.stream().anyMatch(p -> p.getProjectName().equals(name));
+                    if(checkSameName){
+                        System.out.print("The project name you entered already exists");
+                        break;
+                    }
+
                     System.out.print("Neighborhood: ");
                     String neighborhood = sc.nextLine();
                     
@@ -329,21 +337,26 @@ public class ManagerHandler implements IUserHandler {
                         .toLocalDate();        
                     List<BTOProject> createdProjects = managerSvc.viewOwnProjects(me);
                     boolean overlap = false;
-                    for (BTOProject project : createdProjects) {
-                        LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-                        LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                    boolean newVisibility = !selected.isVisible();
 
-                        if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
-                            if(project.isVisible()){
-                                System.out.printf("Project overlaps with: %s (%s to %s)\n", 
-                                    project.getProjectName(),
-                                    existingStart.format(fmt),
-                                    existingEnd.format(fmt)
-                                );
-                                overlap = true;
-                                break;
+                    if(newVisibility){
+                        for (BTOProject project : createdProjects) {
+                            if(project.getProjectName().equals(selected.getProjectName()));
+                            LocalDate existingStart = project.getStartDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                            LocalDate existingEnd = project.getEndDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+    
+                            if (!(endLocal.isBefore(existingStart) || startLocal.isAfter(existingEnd))) {
+                                if(project.isVisible()){
+                                    System.out.printf("Project overlaps with: %s (%s to %s)\n", 
+                                        project.getProjectName(),
+                                        existingStart.format(fmt),
+                                        existingEnd.format(fmt)
+                                    );
+                                    overlap = true;
+                                    break;
+                                }
                             }
-                        }
+                        }    
                     }
 
                     if (overlap) {
@@ -351,7 +364,6 @@ public class ManagerHandler implements IUserHandler {
                         break;
                     }
 
-                    boolean newVisibility = !selected.isVisible();
                     managerSvc.toggleVisibility(me, selected, newVisibility);
                     try {
                         fileManager.updateProjectVisibility(newVisibility);
