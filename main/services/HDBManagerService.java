@@ -73,7 +73,8 @@ public class HDBManagerService {
             threeRoomUnits,
             twoRoomPrice,
             threeRoomPrice,
-            10
+            10,
+            true
         );
 
         return true;
