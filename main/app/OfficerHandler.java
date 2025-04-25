@@ -85,7 +85,7 @@ public class OfficerHandler implements IUserHandler{
 
                 case "2":
                     List<Registration> registrations = registrationSvc.getRegistration().stream()
-                    .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()))
+                    .filter(r -> r.getOfficer().getNRIC().equals(me.getNRIC()) && !r.getStatus().equals(HDBOfficer.RegistrationStatus.NONE))
                     .collect(Collectors.toList());
 
                     if (registrations.isEmpty()) {

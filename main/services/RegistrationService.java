@@ -107,10 +107,24 @@ public class RegistrationService {
             System.out.println("No active request / assignment to cancel.");
         } else {
             officer.setHandlingProjectId(null);
+            if(officer.getRegStatus().equals(RegistrationStatus.APPROVED)){
+                fileManager.updateProjectOfficer(projectName, officer.getNRIC(), officer.getName(), false);
+            }
             officer.setRegStatus(HDBOfficer.RegistrationStatus.NONE);
             fileManager.updateRegistration(officer.getNRIC(), projectName, RegistrationStatus.NONE);
+            fileManager.updateOfficerInProject(projectName, officer.getNRIC(), false);
+            Registration registered = getRegistrationByOfficer(officer, projectName);
+            registered.setStatus(RegistrationStatus.NONE);
+            
             System.out.println("Registration removed.");
         }
+    }
+
+    public Registration getRegistrationByOfficer(HDBOfficer officer, String projectName){
+        return registrations.stream()
+            .filter(r -> r.getOfficer().getNRIC().equals(officer.getNRIC()) && r.getProject().getProjectName().equals(projectName))
+            .findFirst()
+            .orElse(null);
     }
 
     public boolean handleOfficerRegistration(HDBManager manager, BTOProject project, HDBOfficer officer) {
