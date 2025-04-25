@@ -165,11 +165,11 @@ public class ApplicantService {
      * @param applicant the user whose application to view
      * @param allProjects list of all available projects
      */
-    public void viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
+    public BTOProject viewAppliedProject(Applicant applicant, List<BTOProject> allProjects) {
         Application app = getApplication(applicant.getNRIC());
         if (app == null) {
             System.out.println("No application found.");
-            return;
+            return null;
         }
 
         System.out.println("Status: " + app.getStatus());
@@ -185,10 +185,11 @@ public class ApplicantService {
                 System.out.println("Neighborhood: " + p.getNeighborhood());
                 System.out.println("Application Period: " + df.format(p.getStartDate()) + " to " + df.format(p.getEndDate()));
                 System.out.println("Manager: " + p.getManager().getName());
-                return;
+                return p;                
             }
         }
         System.out.println("Applied project details are not found.");
+        return null;
     }
 
     /**
