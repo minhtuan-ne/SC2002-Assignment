@@ -200,4 +200,8 @@ public class BTOProject {
     public void removeOfficer(HDBOfficer officer) {
         this.officers.remove(officer);
     }
+
+    public void removeOfficerByNRIC(String nric){
+        this.officers.removeIf(o -> o.getNRIC().equals(nric));
+    }
 }

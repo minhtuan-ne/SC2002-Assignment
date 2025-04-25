@@ -91,7 +91,7 @@ public class Application {
      */
     public void setStatus(String status) {
         this.prevStatus = this.status;
-        this.status = Objects.requireNonNull(status, "status must not be null");
+        this.status = status;
     }
 
     /**
@@ -100,6 +100,6 @@ public class Application {
      * @param status the status to store as previous
      */
     public void setPrevStatus(String status) {
-        this.prevStatus = Objects.requireNonNull(status, "prevStatus must not be null");
+        this.prevStatus = status;
     }
 }
