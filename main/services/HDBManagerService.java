@@ -42,23 +42,10 @@ public class HDBManagerService {
      * @return true if project is successfully created
      */
     public boolean createProject(HDBManager manager, String name, String neighborhood, Date startDate, Date endDate, int twoRoomUnits, int threeRoomUnits) {
-        List<BTOProject> managerProjects = viewOwnProjects(manager);
-        Date currentDate = new Date();
-
-        for (BTOProject p : managerProjects) {
-            System.out.println("Project: " + p.getProjectName() + ", Visible: " + p.isVisible() + 
-                            ", End date: " + p.getEndDate() + ", Current date: " + currentDate);
-            if (p.isVisible() && !currentDate.after(p.getEndDate())) {
-                System.out.println("Project is visible and not expired");
-                break;
-            }
-        }
-
         List<Flat> flats = List.of(new TwoRoom(twoRoomUnits, 0), new ThreeRoom(threeRoomUnits, 0));
         BTOProject newProject = new BTOProject(manager, name, neighborhood, startDate, endDate, flats, 10, new ArrayList<>());
         projectSvc.addProject(newProject);
         manager.addProject(newProject);
-
         int twoRoomPrice = 350000;
         int threeRoomPrice = 450000;
 
