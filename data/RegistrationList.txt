@@ -1,5 +1,1 @@
 Officer	Project name	Status
-T2109876H	Narue	NONE
-T1234567J	Narue	NONE
-T1234567J	Acacia Breeze	APPROVED
-T2109876H	idk	APPROVED
